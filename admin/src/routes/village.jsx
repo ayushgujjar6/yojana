@@ -202,7 +202,7 @@ const Village = () => {
             setVillageData((prevData) => prevData.filter((village) => village.id !== id));
 
             console.log("Village deleted successfully!");
-            await fetchvillage();
+            await fetchvillage(selectedTaluka, selectedPanchayat);
         } catch (error) {
             console.error("Error deleting village:", error);
         }
@@ -210,13 +210,16 @@ const Village = () => {
 
     return (
         <div className="flex flex-col gap-y-4">
-            <div className="flex flex-row justify-between">
+            <div className="flex lg:flex-row  flex-col justify-between">
                 <h1 className="title">Village</h1>
+                <button className="flex justify-center items-center w-[80px] h-[30px] text-xl  font-bold bg-blue-400 text-white rounded-md" onClick={handleOpenForm}>
+                        <Plus className="text-xl" /> New
+                    </button>
             </div>
             
 
             <div className="flex flex-row space-x-3 ">
-                <select ref={taluka_idRef} onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 darkh:text-white">
+                <select ref={taluka_idRef} onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
                     <option value="">Select Taluka</option>
                     {talukaData.map(taluka => (
                         <option key={taluka.taluka_id} value={taluka.taluka_id}>
@@ -232,11 +235,6 @@ const Village = () => {
                         </option>
                     ))}
                 </select>
-                <div className="flex pl-[58%]">
-                    <button className="flex justify-center items-center w-[80px] h-[30px] text-xl font-bold bg-blue-400 text-white rounded-md" onClick={handleOpenForm}>
-                        <Plus className="text-xl" /> New
-                    </button>
-                </div>
             </div>
 
             {/* Table to Display panchayat Data */}

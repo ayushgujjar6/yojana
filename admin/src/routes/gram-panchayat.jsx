@@ -158,7 +158,7 @@ const GramPanchayat = () => {
             </div>
 
             <div className="flex flex-col justify-between">
-                <select ref={taluka_idRef} onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md text">
+                <select ref={taluka_idRef} onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
                     <option value="">Select Taluka</option>
                     {talukaData.map(taluka => (
                         <option key={taluka.taluka_id} value={taluka.taluka_id}>
