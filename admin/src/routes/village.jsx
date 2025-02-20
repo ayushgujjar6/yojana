@@ -210,9 +210,9 @@ const Village = () => {
 
     return (
         <div className="flex flex-col gap-y-4">
-            <div className="flex lg:flex-row  flex-col justify-between">
+            <div className="flex lg:flex-row  flex-col  justify-between">
                 <h1 className="title">Village</h1>
-                <button className="flex justify-center items-center w-[80px] h-[30px] text-xl  font-bold bg-blue-400 text-white rounded-md" onClick={handleOpenForm}>
+                <button className="flex justify-center mt-2 items-center lg:w-[80px] lg:h-[30px] md:w-[80px] md:h-[30px] w-[60px] h-[25px]  lg:text-xl  text-xs font-bold bg-blue-400 text-white rounded-md" onClick={handleOpenForm}>
                         <Plus className="text-xl" /> New
                     </button>
             </div>

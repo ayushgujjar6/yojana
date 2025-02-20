@@ -308,7 +308,7 @@ app.post('/api/new-village', (req,res)=> {
 });
 
 
-app.delete("/api/village/:id", (req, res) => {
+  app.delete("/api/village/:id", (req, res) => {
     const { id } = req.params;
     const sql = `DELETE FROM village_tbl WHERE village_id = ?`;
     db.query(sql, [id], (err, result) => {
