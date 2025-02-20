@@ -215,6 +215,18 @@ app.put("/api/taluka/:id", (req, res) => {
 
 //--------------------------------------Panchayat-----------------------------------------------
 
+app.get('/api/panchayat', (req,res) => {
+    const {taluka_id} = req.params;
+    db.query('SELECT * FROM gram_panchayat ',  (err,result)=> {
+        if(err){
+            console.log("Error :" , err);
+            return res.status(500).json({error:"Database error"});
+        }
+        res.json(result);
+    });
+});
+
+
 
 app.get('/api/panchayat/:taluka_id', (req,res) => {
     const {taluka_id} = req.params;

@@ -10,7 +10,7 @@ import { cn } from "@/utils/cn";
 
 import PropTypes from "prop-types";
 
-export const Sidebar = forwardRef(({ collapsed }, ref) => {
+export const Sidebar = forwardRef(({ collapsed , setCollapsed}, ref) => {
     return (
         <aside
             ref={ref}
@@ -45,6 +45,11 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                                 key={link.label}
                                 to={link.path}
                                 className={cn("sidebar-item", collapsed && "md:w-[45px]")}
+                                onClick={() => {
+                                    if (window.innerWidth < 768) {
+                                        setCollapsed(true); // Collapse menu on mobile click
+                                    }
+                                }}
                             >
                                 <link.icon
                                     size={22}
