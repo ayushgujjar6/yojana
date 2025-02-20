@@ -278,7 +278,85 @@ app.put("/api/panchayat/:id", (req, res) => {
     });
 });
 
+//-----------------------------------------------Village------------------------------------------------------
+
+
+app.get('/api/village/:taluka_id/:panchayat_id', (req,res) => {
+    const {taluka_id, panchayat_id} = req.params;
+    db.query(`SELECT * FROM village_tbl WHERE taluka_id = ? AND panchayat_id = ?`,[taluka_id, panchayat_id],  (err,result)=> {
+        if(err){
+            console.log("Error :" , err);
+            return res.status(500).json({error:"Database error"});
+        }
+        res.json(result);
+    });
+});
+
+
+app.post('/api/new-village', (req,res)=> {
+    const {village_eng, village_marathi,taluka_id, panchayat_id} = req.body;
+    const sql = `INSERT INTO village_tbl (village_eng, village_marathi,taluka_id, panchayat_id, status, ins_date_time, update_date_time) VALUES (?, ?, ?, ?,'yes', NOW(), NOW())`;
+
+    db.query(sql,[village_eng,village_marathi, taluka_id, panchayat_id], (err,result)=> {
+        if(err){
+            console.log("error:" ,err);
+            return res.status(500).json({error:"Failed tp Add"});
+        }
+        res.status(201).json({message: `${village_eng} addeed successfully !`});
+        
+    });
+});
+
+
+app.delete("/api/village/:id", (req, res) => {
+    const { id } = req.params;
+    const sql = `DELETE FROM village_tbl WHERE village_id = ?`;
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error("Error deleting village:", err);
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: "Village not found" });
+            return;
+        }
+        res.json({ message: "Village deleted successfully" });
+    });
+});
+
+
+app.put("/api/village/:id", (req, res) => {
+    const { id } = req.params;
+    const { village_eng, village_marathi} = req.body;
+
+    const sql = `UPDATE village_tbl 
+                 SET village_eng = ?, village_marathi = ?, update_date_time = NOW()  
+                 WHERE village_id = ?`;
+
+   
+                 db.query(sql, [village_eng, village_marathi, id], (err, result) => {
+                    if (err) {
+                        res.status(500).json({ error: err.message });
+                        return;
+                    }
+                    res.json({ message: "Village updated successfully" });
+                });
+    });
+
+
+
+
+
+
+
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);
 });
+
+
+

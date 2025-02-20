@@ -7,7 +7,7 @@ import DashboardPage from "@/routes/page";
 import Yojana from "@/routes/yojana";
 import Taluka from "@/routes/taluka";
 import GramPanchayat from "@/routes/gram-panchayat";
-import Profile from './layouts/Profile';
+import Village from '@/routes/village'
 
 function App() {
     const router = createBrowserRouter([
@@ -40,8 +40,8 @@ function App() {
                     element: <GramPanchayat />,
                 },
                 {
-                    path: "customers",
-                    element: <h1 className="title">Customers</h1>,
+                    path: "village",
+                    element: <Village />,
                 },
                 {
                     path: "new-customer",
