@@ -6,13 +6,13 @@ const bodyParser = require('body-parser');
 const db = require('./DB/db');
 require('dotenv').config();
 
+
+
 const app =express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = 5000;
-const SECRET_KEY = "e909c1db80a01ca044c8eb8d2fe6740630ce21693cdf9f313643f7ed021b31a29ac870a2f2a29c18cc745232b10347338243d9470424d046f2b73137f27e2c5b"; // Change this in production
 
 
 app.post('/api/login', (req,res) => {
