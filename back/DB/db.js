@@ -1,9 +1,8 @@
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 
-// Function to connect to InfinityFree MySQL
 const connectToInfinityFree = () => {
   return mysql.createConnection({
     host: process.env.DB_HOST,
@@ -13,7 +12,6 @@ const connectToInfinityFree = () => {
   });
 };
 
-// Function to connect to Localhost MySQL
 const connectToLocalhost = () => {
   return mysql.createConnection({
     host: "localhost",
@@ -25,12 +23,9 @@ const connectToLocalhost = () => {
 
 let db = connectToInfinityFree();
 
-// Try connecting to InfinityFree first
 db.connect((err) => {
   if (err) {
-    console.error("InfinityFree DB failed! Switching to localhost...");
-
-    // Try connecting to localhost
+    console.error("InfinityFree DB failed! Switching to localhost...",err);
     db = connectToLocalhost();
     db.connect((localErr) => {
       if (localErr) {
@@ -44,4 +39,7 @@ db.connect((err) => {
   }
 });
 
-module.exports = db;
+// API Route
+module.exports = (req, res) => {
+  res.json({ message: "API is working!", database: process.env.DB_NAME });
+};

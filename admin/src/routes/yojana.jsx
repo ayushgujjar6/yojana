@@ -20,7 +20,7 @@ const Yojana = () => {
     // Fetch Yojana data from the backend
     const fetchYojana = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/yojana");
+            const response = await fetch(`${VITE_REACT_APP_BACKEND_BASEURL}/api/yojana`);
             const data = await response.json();
             setYojanaData(data);
         } catch (error) {
@@ -58,7 +58,7 @@ const Yojana = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:5000/api/yojana/${formData.id}` : "http://localhost:5000/api/new-yojana",
+                formData?.id ? `${VITE_REACT_APP_BACKEND_BASEURL}/api/yojana/${formData.id}` : `${VITE_REACT_APP_BACKEND_BASEURL}/api/new-yojana`,
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -88,7 +88,7 @@ const Yojana = () => {
         if (!window.confirm("Are you sure you want to delete this Yojana?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:5000/api/yojana/${id}`, {
+            const response = await fetch(`${VITE_REACT_APP_BACKEND_BASEURL}/api/yojana/${id}`, {
              method: "DELETE",
             });
 
