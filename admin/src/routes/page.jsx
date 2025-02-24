@@ -35,7 +35,7 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchTotalYojana = async () => {
             try {
-                const response = await fetch(`${VITE_REACT_APP_BACKEND_BASEURL}/api/total-yojana`);
+                const response = await fetch("http://localhost:3000/api/total-yojana");
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);

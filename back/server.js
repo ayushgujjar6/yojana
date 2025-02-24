@@ -4,8 +4,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const db = require('./DB/db');
-require('dotenv').config();
+const dotenv = require("dotenv");
+dotenv.config();
 
+
+const PORT  = 5555;
 
 
 const app =express();
