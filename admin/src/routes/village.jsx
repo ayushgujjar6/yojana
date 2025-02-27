@@ -35,7 +35,7 @@ const Village = () => {
 
     const fetchtaluka = async () => {
         try{
-            const response = await fetch("http://localhost:3000/api/taluka");
+            const response = await fetch("http://localhost:5555/api/taluka");
             const data = await response.json();
             setTalukatData(data);
         }catch(e){
@@ -46,7 +46,7 @@ const Village = () => {
     // Fetch panchayat data from the backend
     const fetchpanchayat = async (taluka_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/panchayat/${taluka_id}`);
+            const response = await fetch(`http://localhost:5555/api/panchayat/${taluka_id}`);
             const data = await  response.json();
             setPanchayatData(data);
         } catch (error) {
@@ -59,7 +59,7 @@ const Village = () => {
             if(!taluka_id || !panchayat_id){
                 return ;
             }
-            const response = await fetch(`http://localhost:3000/api/village/${taluka_id}/${panchayat_id}`);
+            const response = await fetch(`http://localhost:5555/api/village/${taluka_id}/${panchayat_id}`);
             const data = await  response.json();
             setVillageData(data);
         } catch (error) {
@@ -150,7 +150,7 @@ const Village = () => {
     
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:3000/api/village/${formData.id}` : "http://localhost:3000/api/new-village",
+                formData?.id ? `http://localhost:5555/api/village/${formData.id}` : "http://localhost:5555/api/new-village",
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -191,7 +191,7 @@ const Village = () => {
         if (!window.confirm("Are you sure you want to delete this village?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:3000/api/village/${id}`, {
+            const response = await fetch(`http://localhost:5555/api/village/${id}`, {
              method: "DELETE",
             });
 
@@ -259,10 +259,10 @@ const Village = () => {
                                             <td className="table-cell">{village.village_marathi}</td>   
                                             <td className="table-cell">
                                                 <div className="flex items-center gap-x-4">
-                                                    <button className="text-blue-500 dark:text-blue-600" onClick={() => handleEditForm(village)}>
+                                                    <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(village)}>
                                                         <PencilLine size={20} />
                                                     </button>
-                                                    <button className="text-red-500" onClick={() => deletevillage(village.village_id)}>
+                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deletevillage(village.village_id)}>
                                                         <Trash size={20} />
                                                     </button>
                                                 </div>

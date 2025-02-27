@@ -4,8 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const db = require('./DB/db');
-const dotenv = require("dotenv");
-dotenv.config();
+
 
 
 const PORT  = 5555;
@@ -160,17 +159,17 @@ app.get('/api/taluka', (req,res) => {
 
 
 app.post("/api/new-taluka", (req, res) => {
-    const {taluka_name_eng, taluka_name_marathi, pincode } = req.body;
+    const {taluka_name_eng, taluka_name_marathi, pincode, status } = req.body;
 
-    if (!taluka_name_eng || !taluka_name_marathi || !pincode) {
+    if (!taluka_name_eng || !taluka_name_marathi || !pincode || !status) {
         console.error("Validation Error: Missing fields");
         return res.status(400).json({ error: "All fields are required!" });
     }
 
-    const sql = `INSERT INTO taluka ( taluka_name_eng, taluka_name_marathi,  ins_date_time, update_date_time, status ,pincode) VALUES (?, ?,NOW(), NOW(), 'yes' , ?)`;
+    const sql = `INSERT INTO taluka ( taluka_name_eng, taluka_name_marathi,  ins_date_time, update_date_time, status ,pincode) VALUES (?, ?,NOW(), NOW(), ? , ?)`;
     
 
-    db.query(sql, [ taluka_name_eng, taluka_name_marathi, pincode], (err, result) => {
+    db.query(sql, [ taluka_name_eng, taluka_name_marathi, status, pincode], (err, result) => {
         if (err) {
             console.error("Database Insert Error:", err);  // Debugging
             return res.status(500).json({ error: "Failed to add yojana", details: err.message });
@@ -200,14 +199,14 @@ app.delete("/api/taluka/:id", (req, res) => {
 
 
 app.put("/api/taluka/:id", (req, res) => {
-    const { taluka_name_eng, taluka_name_marathi, pincode } = req.body;
+    const { taluka_name_eng, taluka_name_marathi, pincode, status } = req.body;
     const { id } = req.params;
 
     const sql = `UPDATE taluka 
-                 SET taluka_name_eng = ?, taluka_name_marathi = ? ,pincode = ?, update_date_time = NOW()  
+                 SET taluka_name_eng = ?, taluka_name_marathi = ? ,status = ? , pincode = ?, update_date_time = NOW()  
                  WHERE taluka_id = ?`;
 
-    db.query(sql, [taluka_name_eng, taluka_name_marathi,  pincode ,id], (err, result) => {
+    db.query(sql, [taluka_name_eng, taluka_name_marathi, status,  pincode ,id], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -244,10 +243,10 @@ app.get('/api/panchayat/:taluka_id', (req,res) => {
 
 
 app.post('/api/new-panchayat', (req,res)=> {
-    const {panchayat_eng, panchayat_marathi, taluka_id} = req.body;
-    const sql = `INSERT INTO gram_panchayat (panchayat_eng, panchayat_marathi, taluka_id, status, ins_date_time, update_date_time) VALUES (?, ?, ?,'yes', NOW(), NOW())`;
+    const {panchayat_eng, panchayat_marathi, taluka_id, status} = req.body;
+    const sql = `INSERT INTO gram_panchayat (panchayat_eng, panchayat_marathi, taluka_id, status, ins_date_time, update_date_time) VALUES (?, ?, ?,?, NOW(), NOW())`;
 
-    db.query(sql,[panchayat_eng,panchayat_marathi,taluka_id], (err,result)=> {
+    db.query(sql,[panchayat_eng,panchayat_marathi,taluka_id, status], (err,result)=> {
         if(err){
             console.log("error:" ,err);
             return res.status(500).json({error:"Failed tp Add"});
@@ -277,14 +276,14 @@ app.delete("/api/panchayat/:id", (req, res) => {
 
 
 app.put("/api/panchayat/:id", (req, res) => {
-    const { taluka_name_eng, taluka_name_marathi, pincode } = req.body;
+    const { taluka_name_eng, taluka_name_marathi, status } = req.body;
     const { id } = req.params;
 
     const sql = `UPDATE gram_panchayat 
-                 SET panchayat_eng = ?, panchayat_marathi = ?, update_date_time = NOW()  
+                 SET panchayat_eng = ?, panchayat_marathi = ?, status = ? , update_date_time = NOW()  
                  WHERE panchayat_id = ?`;
 
-    db.query(sql, [panchayat_eng, panchayat_marathi, id], (err, result) => {
+    db.query(sql, [panchayat_eng, panchayat_marathi,status ,id], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;

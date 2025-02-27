@@ -8,17 +8,21 @@ const Taluka = () => {
     const [talukaData, setTalukaData] = useState([]); // Store fetched data
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState(null); // Stores current form data (for editing)
-
+    const [selectedStatus, setSelectedStatus] = useState("all");
+    const [filteredData, setFilteredData] = useState([]); 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
     // Input Refs
     const engnameRef = useRef();
     const marathinameRef = useRef();
     const pincodeRef = useRef();
+    const statusInputRef = useRef();
     
 
     // Fetch taluka data from the backend
     const fetchtaluka = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/taluka");
+            const response = await fetch("http://localhost:5555/api/taluka");
             const data = await response.json();
             setTalukaData(data);
         } catch (error) {
@@ -49,11 +53,12 @@ const Taluka = () => {
             taluka_name_eng: engnameRef.current.value,
             taluka_name_marathi: marathinameRef.current.value,
             pincode: pincodeRef.current.value,
+            status: statusInputRef.current.value,
         };
 
         try {
             const response = await fetch(
-                formData?.taluka_id ? `http://localhost:3000/api/taluka/${formData.taluka_id}` : "http://localhost:3000/api/new-taluka",
+                formData?.taluka_id ? `http://localhost:5555/api/taluka/${formData.taluka_id}` : "http://localhost:5555/api/new-taluka",
                 {
                     method: formData?.taluka_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -83,7 +88,7 @@ const Taluka = () => {
         if (!window.confirm("Are you sure you want to delete this taluka?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:3000/api/taluka/${id}`, {
+            const response = await fetch(`http://localhost:5555/api/taluka/${id}`, {
              method: "DELETE",
             });
 
@@ -100,6 +105,44 @@ const Taluka = () => {
         }
     };
 
+
+
+    const handleStatusChange = (e) => {
+             setSelectedStatus(e.target.value);
+             setCurrentPage(1);
+        };
+        
+        useEffect(() => {
+            setCurrentPage(1);
+            if (selectedStatus === "all") {
+                setFilteredData(talukaData);
+            } else {
+                setFilteredData(talukaData.filter(yojana => yojana.status === selectedStatus));
+            }
+        }, [selectedStatus, talukaData]);
+    
+    
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+        
+        const nextPage = () => {
+            if (currentPage < Math.ceil(filteredData.length / itemsPerPage)) {
+                setCurrentPage(currentPage + 1);
+            }
+        };
+        
+        const prevPage = () => {
+            if (currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
+                }
+            };
+    
+    
+     
+    
+    
+
     return (
         <div className="flex flex-col gap-y-4">
             <div className="flex flex-row justify-between">
@@ -108,6 +151,16 @@ const Taluka = () => {
                     <Plus className="text-xl" /> New
                 </button>
             </div>
+
+            <div className="flex flex-col justify-between">
+                <select onChange={handleStatusChange} value={selectedStatus} className="w-[150px] h-[30px] rounded-md outline outline-2 outline-slate-200 dark:bg-slate-800 dark:text-white">
+                        <option value="all">All</option>
+                        <option value="Active">Active</option>
+                        <option value="Deactive">Deactive</option>
+                 </select>
+            </div>
+
+            
 
             {/* Table to Display taluka Data */}
             <div className="card">
@@ -120,23 +173,30 @@ const Taluka = () => {
                                     <th className="table-head">Taluka</th>
                                     <th className="table-head">तालुका</th>
                                     <th className="table-head">Pincode</th>
+                                    <th className="table-head">Status</th>
                                     <th className="table-head">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="table-body">
-                                {talukaData.length > 0 ? (
-                                    talukaData.map((taluka, index) => (
+                                {currentItems.length > 0 ? (
+                                    currentItems.map((taluka, index) => (
                                         <tr key={taluka.taluka_id} className="table-row">
                                             <td className="table-cell">{index + 1}</td>
                                             <td className="table-cell">{taluka.taluka_name_eng}</td>
                                             <td className="table-cell">{taluka.taluka_name_marathi}</td>
                                             <td className="table-cell">{taluka.pincode}</td>
                                             <td className="table-cell">
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
+                                                    ${taluka.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
+                                                    {taluka.status}
+                                                </span>
+                                            </td>
+                                            <td className="table-cell">
                                                 <div className="flex items-center gap-x-4">
-                                                    <button className="text-blue-500 dark:text-blue-600" onClick={() => handleEditForm(taluka)}>
+                                                    <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(taluka)}>
                                                         <PencilLine size={20} />
                                                     </button>
-                                                    <button className="text-red-500" onClick={() => deletetaluka(taluka.taluka_id)}>
+                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deletetaluka(taluka.taluka_id)}>
                                                         <Trash size={20} />
                                                     </button>
                                                 </div>
@@ -151,6 +211,10 @@ const Taluka = () => {
                             </tbody>
                         </table>
                     </div>
+                        <div className="flex lg:justify-end  justify-start gap-4 ">
+                            <button onClick={prevPage} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded-md">Previous</button>
+                            <button onClick={nextPage} disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)} className="px-4 py-2 bg-gray-300 rounded-md">Next</button>
+                        </div>
                 </div>
             </div>
 
@@ -165,6 +229,10 @@ const Taluka = () => {
                             <input ref={engnameRef} type="text" placeholder="New Taluka Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.taluka_name_eng|| ""} />
                             <input ref={marathinameRef} type="text" placeholder="नवीन तालुक्याचे नाव" required className="w-full p-2 border rounded-md" defaultValue={formData?.taluka_name_marathi|| ""} />
                             <input ref={pincodeRef} type="text" placeholder="Pincode" required className="w-full p-2 border rounded-md" defaultValue={formData?.pincode || ""} />
+                            <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
+                                <option value="Active">Active</option>
+                                <option value="Deactive">Deactive</option>
+                            </select>
                             <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md">
                                 {formData ? "Update Taluka" : "Add taluka"}
                             </button>

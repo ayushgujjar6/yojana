@@ -7,10 +7,15 @@ import DashboardPage from "@/routes/page";
 import Yojana from "@/routes/yojana";
 import Taluka from "@/routes/taluka";
 import GramPanchayat from "@/routes/gram-panchayat";
-import Village from '@/routes/village'
+import Village from '@/routes/village';
+import SignIn from '@/routes/sign-in';
 
 function App() {
     const router = createBrowserRouter([
+        // {
+        //     path: "/",
+        //     element: <SignIn />,  // Show Sign-In first
+        // },
         {
             path: "/",
             element: <Layout />,

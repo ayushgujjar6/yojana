@@ -8,6 +8,10 @@ const Yojana = () => {
     const [yojanaData, setYojanaData] = useState([]); // Store fetched data
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState(null); // Stores current form data (for editing)
+    const [selectedStatus, setSelectedStatus] = useState("all");
+    const [filteredData, setFilteredData] = useState([]); 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
 
     // Input Refs
     const categoryRef = useRef();
@@ -20,7 +24,7 @@ const Yojana = () => {
     // Fetch Yojana data from the backend
     const fetchYojana = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/yojana");
+            const response = await fetch("http://localhost:5555/api/yojana");
             const data = await response.json();
             setYojanaData(data);
         } catch (error) {
@@ -31,6 +35,8 @@ const Yojana = () => {
     useEffect(() => {
         fetchYojana(); // Load data on component mount
     }, []);
+
+    
 
     //  Handle opening and closing the form
     const handleOpenForm = () => {
@@ -58,7 +64,7 @@ const Yojana = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:3000/api/yojana/${formData.id}` : "http://localhost:3000/api/new-yojana",
+                formData?.id ? `http://localhost:5555/api/yojana/${formData.id}` : "http://localhost:5555/api/new-yojana",
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -88,7 +94,7 @@ const Yojana = () => {
         if (!window.confirm("Are you sure you want to delete this Yojana?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:3000/api/yojana/${id}`, {
+            const response = await fetch(`http://localhost:5555/api/yojana/${id}`, {
              method: "DELETE",
             });
 
@@ -105,6 +111,40 @@ const Yojana = () => {
         }
     };
 
+    const handleStatusChange = (e) => {
+         setSelectedStatus(e.target.value);
+         setCurrentPage(1);
+    };
+    
+    useEffect(() => {
+        setCurrentPage(1);
+        if (selectedStatus === "all") {
+            setFilteredData(yojanaData);
+        } else {
+            setFilteredData(yojanaData.filter(yojana => yojana.status === selectedStatus));
+        }
+    }, [selectedStatus, yojanaData]);
+
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    
+    const nextPage = () => {
+        if (currentPage < Math.ceil(filteredData.length / itemsPerPage)) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+    
+    const prevPage = () => {
+        if (currentPage > 1) {
+                setCurrentPage(currentPage - 1);
+            }
+        };
+
+
+ 
+
     return (
         <div className="flex flex-col gap-y-4">
             <div className="flex flex-row justify-between">
@@ -112,6 +152,14 @@ const Yojana = () => {
                 <button className="flex justify-center items-center w-[80px] h-[30px] text-xl font-bold bg-blue-400 text-white rounded-md" onClick={handleOpenForm}>
                     <Plus className="text-xl" /> New
                 </button>
+            </div>
+
+            <div className="flex flex-col justify-between">
+                <select onChange={handleStatusChange} value={selectedStatus} className="w-[150px] h-[30px] rounded-md outline outline-2 outline-slate-200 dark:bg-slate-800 dark:text-white">
+                        <option value="all">All</option>
+                        <option value="Active">Active</option>
+                        <option value="Deactive">Deactive</option>
+                 </select>
             </div>
 
             {/* Table to Display Yojana Data */}
@@ -128,8 +176,8 @@ const Yojana = () => {
                                 </tr>
                             </thead>
                             <tbody className="table-body">
-                                {yojanaData.length > 0 ? (
-                                    yojanaData.map((yojana, index) => (
+                                {currentItems.length > 0 ? (
+                                    currentItems.map((yojana, index) => (
                                         <tr key={yojana.id} className="table-row">
                                             <td className="table-cell">{index + 1}</td>
                                             <td className="table-cell">{yojana.yojana_type}</td>
@@ -140,13 +188,13 @@ const Yojana = () => {
                                                 </span>
                                             </td>
                                             <td className="table-cell">
-                                                <div className="flex items-center gap-x-4">
-                                                    <button className="text-blue-500 dark:text-blue-600" onClick={() => handleEditForm(yojana)}>
-                                                        <PencilLine size={20} />
-                                                    </button>
-                                                    <button className="text-red-500" onClick={() => deleteYojana(yojana.yojana_type_id)}>
-                                                        <Trash size={20} />
-                                                    </button>
+                                                    <div className="flex items-center gap-x-4">
+                                                        <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(yojana)}>
+                                                            <PencilLine size={20} />
+                                                        </button>
+                                                        <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deleteYojana(yojana.yojana_type_id)}>
+                                                            <Trash size={20} />
+                                                        </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -158,7 +206,12 @@ const Yojana = () => {
                                 )}
                             </tbody>
                         </table>
+                        <div className="flex lg:justify-end  justify-start gap-4 mt-5 ">
+                            <button onClick={prevPage} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded-md">Previous</button>
+                            <button onClick={nextPage} disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)} className="px-4 py-2 bg-gray-300 rounded-md">Next</button>
+                        </div>
                     </div>
+                        
                 </div>
             </div>
 

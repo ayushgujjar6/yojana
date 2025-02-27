@@ -12,6 +12,11 @@ const GramPanchayat = () => {
     const [formData, setFormData] = useState(null); // Stores current form data (for editing)
     const [selectedTaluka, setSelectedTaluka] = useState(null);
 
+    const [selectedStatus, setSelectedStatus] = useState("all");
+    const [filteredData, setFilteredData] = useState([]); 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+    
 
 
 
@@ -22,14 +27,14 @@ const GramPanchayat = () => {
     // Input Refs
     const panchayat_marathiRef = useRef();
     const panchayat_engRef = useRef();
-    const panchayat_idRef = useRef();
     const taluka_idRef = useRef();
-
+    const statusInputRef = useRef();
+    
     
 
     const fetchtaluka = async () => {
         try{
-            const response = await fetch("http://localhost:3000/api/taluk");
+            const response = await fetch("http://localhost:5555/api/taluka");
             const data = await response.json();
             setTalukatData(data);
         }catch(e){
@@ -40,7 +45,8 @@ const GramPanchayat = () => {
     // Fetch panchayat data from the backend
     const fetchpanchayat = async (taluka_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/panchayat/${taluka_id}`);
+            const url = taluka_id === "All" ? "http://localhost:5555/api/panchayat" : `http://localhost:5555/api/panchayat/${taluka_id}`;
+            const response = await fetch(url);
             const data = await  response.json();
             setPanchayatData(data);
         } catch (error) {
@@ -54,7 +60,7 @@ const GramPanchayat = () => {
 
     useEffect(() => {
         fetchtaluka();// Load data on component mount
-        const storedTaluka = localStorage.getItem("SelectedTaluka");
+        const storedTaluka = localStorage.getItem("SelectedTaluka") || "All";
         if(storedTaluka){
             setSelectedTaluka(storedTaluka);
             fetchpanchayat(storedTaluka);
@@ -70,7 +76,7 @@ const GramPanchayat = () => {
         const taluka_id = event.target.value;
         setSelectedTaluka(taluka_id);
         localStorage.setItem("SelectedTaluka", taluka_id);
-        await fetchpanchayat();
+        await fetchpanchayat(taluka_id);
     }
 
 
@@ -95,11 +101,12 @@ const GramPanchayat = () => {
             panchayat_eng: panchayat_engRef.current.value,
             panchayat_marathi: panchayat_marathiRef.current.value,
             taluka_id : taluka_idRef.current.value,
+            status : statusInputRef.current.value,
            };
 
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:3000/api/panchayat/${formData.id}` : "http://localhost:3000/api/new-panchayat",
+                formData?.id ? `http://localhost:5555/api/panchayat/${formData.id}` : "http://localhost:5555/api/new-panchayat",
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -109,7 +116,7 @@ const GramPanchayat = () => {
 
             if (!response.ok) throw new Error("Failed to save panchayat");
 
-            fetchpanchayat(); // Refresh the list after adding/updating
+            await fetchpanchayat(selectedTaluka); // Refresh the list after adding/updating
 
 
             handleCloseForm();
@@ -118,6 +125,9 @@ const GramPanchayat = () => {
             console.error("Error saving panchayat:", error);
         }
     };
+
+
+    
 
     //  Handle Editing
     const handleEditForm = (panchayat) => {
@@ -131,7 +141,7 @@ const GramPanchayat = () => {
         if (!window.confirm("Are you sure you want to delete this Panchayat?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:3000/api/panchayat/${id}`, {
+            const response = await fetch(`http://localhost:5555/api/panchayat/${id}`, {
              method: "DELETE",
             });
 
@@ -142,11 +152,43 @@ const GramPanchayat = () => {
             setPanchayatData((prevData) => prevData.filter((panchayat) => panchayat.id !== id));
 
             console.log("Panchayat deleted successfully!");
-            await fetchpanchayat();
+            await fetchpanchayat(selectedTaluka);
         } catch (error) {
             console.error("Error deleting panchayat:", error);
         }
     };
+
+    const handleStatusChange = (e) => {
+                 setSelectedStatus(e.target.value);
+                 setCurrentPage(1);
+            };
+            
+    useEffect(() => {
+                setCurrentPage(1);
+                if (selectedStatus === "all") {
+                    setFilteredData(panchayatData);
+                } else {
+                    setFilteredData(panchayatData.filter(panchayat => panchayat.status === selectedStatus));
+                }
+            }, [selectedStatus, panchayatData]);
+        
+        
+            const indexOfLastItem = currentPage * itemsPerPage;
+            const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+            const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+            
+            const nextPage = () => {
+                if (currentPage < Math.ceil(filteredData.length / itemsPerPage)) {
+                    setCurrentPage(currentPage + 1);
+                }
+            };
+            
+            const prevPage = () => {
+                if (currentPage > 1) {
+                        setCurrentPage(currentPage - 1);
+                    }
+                };
+        
 
     return (
         <div className="flex flex-col gap-y-4">
@@ -157,15 +199,20 @@ const GramPanchayat = () => {
                 </button>
             </div>
 
-            <div className="flex flex-col justify-between">
+            <div className="flex flex-row justify-start items-start gap-3">
                 <select ref={taluka_idRef} onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
-                    <option value="">Select Taluka</option>
+                    <option value="All">All Taluka</option>
                     {talukaData.map(taluka => (
                         <option key={taluka.taluka_id} value={taluka.taluka_id}>
                             {taluka.taluka_name_eng}
                         </option>
                     ))}
                 </select>
+                <select onChange={handleStatusChange} value={selectedStatus} className="w-[150px] h-[30px] rounded-md outline outline-2 outline-slate-200 dark:bg-slate-800 dark:text-white">
+                        <option value="all">All</option>
+                        <option value="Active">Active</option>
+                        <option value="Deactive">Deactive</option>
+                 </select>
             </div>
 
             {/* Table to Display panchayat Data */}
@@ -173,27 +220,37 @@ const GramPanchayat = () => {
                 <div className="card-body p-0">
                     <div className="relative h-[500px] w-full overflow-auto rounded-none [scrollbar-width:_thin]">
                         <table className="table">
-                            <thead className="table-header">
-                                <tr className="table-row">
-                                    <th className="table-head">ID</th>
-                                    <th className="table-head">Gram Panchayat</th>
-                                    <th className="table-head">ग्राम पंचायत</th>
-                                    <th className="table-head">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="table-body">
-                                {panchayatData.length > 0 ? (
-                                    panchayatData.map((panchayat, index) => (
+                        <thead className="table-header">
+                            <tr className="table-row">
+                                <th className="table-head">ID</th>
+                                <th className="table-head">Gram Panchayat</th>
+                                <th className="table-head">ग्राम पंचायत</th>
+                                <th className="table-head">Taluka</th>  
+                                <th className="table-head">Status</th>
+                                <th className="table-head">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="table-body">
+                                {currentItems.length > 0 ? (
+                                    currentItems.map((panchayat, index) => (
                                         <tr key={panchayat.id} className="table-row">
                                             <td className="table-cell">{index + 1}</td>
                                             <td className="table-cell">{panchayat.panchayat_eng}</td>
-                                            <td className="table-cell">{panchayat.panchayat_marathi}</td>   
+                                            <td className="table-cell">{panchayat.panchayat_marathi}</td>
+                                            <td className="table-cell">{panchayat.taluka_name_eng || panchayat.taluka_id}</td>
+                                            <td>
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
+                                                    ${panchayat.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
+                                                    {panchayat.status}
+                                                </span>
+                                            </td>
                                             <td className="table-cell">
                                                 <div className="flex items-center gap-x-4">
-                                                    <button className="text-blue-500 dark:text-blue-600" onClick={() => handleEditForm(panchayat)}>
+                                                    <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(panchayat)}>
                                                         <PencilLine size={20} />
                                                     </button>
-                                                    <button className="text-red-500" onClick={() => deletepanchayat(panchayat.panchayat_id)}>
+                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deletepanchayat(panchayat.panchayat_id)}>
                                                         <Trash size={20} />
                                                     </button>
                                                 </div>
@@ -202,12 +259,17 @@ const GramPanchayat = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="6" className="text-center p-4">No data available</td>
+                                        <td colSpan="7" className="text-center p-4">No data available</td>
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+
+                         </table>
                     </div>
+                    <div className="flex lg:justify-end  justify-start gap-4 ">
+                            <button onClick={prevPage} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded-md">Previous</button>
+                            <button onClick={nextPage} disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)} className="px-4 py-2 bg-gray-300 rounded-md">Next</button>
+                        </div>
                 </div>
             </div>
 
@@ -220,6 +282,17 @@ const GramPanchayat = () => {
                                     <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
                                         <input ref={panchayat_engRef} type="text" placeholder="New Panchayat Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.panchayat_eng|| ""} />
                                         <input ref={panchayat_marathiRef} type="text" placeholder="पंचायतीचे नवे नाव" required className="w-full p-2 border rounded-md" defaultValue={formData?.panchayat_marathi|| ""} />
+                                        <select ref={taluka_idRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.taluka_id || "" }>
+                                            {talukaData.map(taluka => (
+                                                <option key={taluka.taluka_id} value={taluka.taluka_id}>
+                                                    {taluka.taluka_name_eng}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
+                                            <option value="Active">Active</option>
+                                            <option value="Deactive">Deactive</option>
+                                        </select>
                                         <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md">
                                             {formData ? "Update Panchayat" : "Add Panchayat"}
                                         </button>
