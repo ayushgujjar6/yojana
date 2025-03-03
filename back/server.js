@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const db = require('./DB/db');
 
 
-
+require('dotenv').config();
 
 const PORT  = 5555;
 
@@ -369,8 +369,8 @@ app.put("/api/village/:id", (req, res) => {
 
 
 
-app.listen(PORT, () => {
-    console.log(`Server running on ${PORT}`);
+app.listen(process.env.PORT, () => {
+    console.log(`Server running on ${process.env.PORT}`);
 });
 
 
