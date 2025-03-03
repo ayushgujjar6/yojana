@@ -1,21 +1,38 @@
 const mysql = require('mysql2');
+require('dotenv').config();
 
-const db = mysql.createConnection({
-    host:'localhost',
-    user:'root',
-    password:'',
-    database:'governmentscheme'
-});
+const dbConfigCleverCloud = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.PORT
+};
 
+const dbConfigLocal = {
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'governmentscheme'
+};
 
-db.connect((e) => {
-    if(e)
-    {
-        console.error('DB connection failed : ' + e.stack);
-        return;
-    }
-    else{
-        console.log('Connected to MySQL Database');
+let db = mysql.createConnection(dbConfigCleverCloud);
+
+db.connect((err) => {
+    if (err) {
+        console.error('Clever Cloud DB connection failed:', err.message);
+        console.log('Trying to connect with Localhost Database...');
+        
+        db = mysql.createConnection(dbConfigLocal);
+        db.connect((localErr) => {
+            if (localErr) {
+                console.error('Localhost DB connection failed:', localErr.message);
+            } else {
+                console.log('Connected to Localhost MySQL Database');
+            }
+        });
+    } else {
+        console.log('Connected to Clever Cloud MySQL Database');
     }
 });
 

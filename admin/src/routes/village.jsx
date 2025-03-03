@@ -19,6 +19,7 @@ const Village = () => {
 
 
     
+    const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
 
 
    
@@ -35,7 +36,7 @@ const Village = () => {
 
     const fetchtaluka = async () => {
         try{
-            const response = await fetch("http://localhost:5555/api/taluka");
+            const response = await fetch(`${URL}/api/taluka`);
             const data = await response.json();
             setTalukatData(data);
         }catch(e){
@@ -46,7 +47,7 @@ const Village = () => {
     // Fetch panchayat data from the backend
     const fetchpanchayat = async (taluka_id) => {
         try {
-            const response = await fetch(`http://localhost:5555/api/panchayat/${taluka_id}`);
+            const response = await fetch(`${URL}/api/panchayat/${taluka_id}`);
             const data = await  response.json();
             setPanchayatData(data);
         } catch (error) {
@@ -59,7 +60,7 @@ const Village = () => {
             if(!taluka_id || !panchayat_id){
                 return ;
             }
-            const response = await fetch(`http://localhost:5555/api/village/${taluka_id}/${panchayat_id}`);
+            const response = await fetch(`${URL}/api/village/${taluka_id}/${panchayat_id}`);
             const data = await  response.json();
             setVillageData(data);
         } catch (error) {
@@ -150,7 +151,7 @@ const Village = () => {
     
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:5555/api/village/${formData.id}` : "http://localhost:5555/api/new-village",
+                formData?.id ? `${URL}/api/village/${formData.id}` : `${URL}/api/new-village`,
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -191,7 +192,7 @@ const Village = () => {
         if (!window.confirm("Are you sure you want to delete this village?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:5555/api/village/${id}`, {
+            const response = await fetch(`${URL}/api/village/${id}`, {
              method: "DELETE",
             });
 

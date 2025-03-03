@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
 import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+
 import  axios from 'axios';
+
 
 const GramPanchayat = () => {
     const { theme } = useTheme();
@@ -16,6 +18,9 @@ const GramPanchayat = () => {
     const [filteredData, setFilteredData] = useState([]); 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
+
+
+    const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
     
 
 
@@ -34,7 +39,7 @@ const GramPanchayat = () => {
 
     const fetchtaluka = async () => {
         try{
-            const response = await fetch("http://localhost:5555/api/taluka");
+            const response = await fetch(`${URL}/api/taluka`);
             const data = await response.json();
             setTalukatData(data);
         }catch(e){
@@ -45,7 +50,7 @@ const GramPanchayat = () => {
     // Fetch panchayat data from the backend
     const fetchpanchayat = async (taluka_id) => {
         try {
-            const url = taluka_id === "All" ? "http://localhost:5555/api/panchayat" : `http://localhost:5555/api/panchayat/${taluka_id}`;
+            const url = taluka_id === "All" ? `${URL}/api/panchayat` : `${URL}/api/panchayat/${taluka_id}`;
             const response = await fetch(url);
             const data = await  response.json();
             setPanchayatData(data);
@@ -106,7 +111,7 @@ const GramPanchayat = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:5555/api/panchayat/${formData.id}` : "http://localhost:5555/api/new-panchayat",
+                formData?.id ? `${URL}/api/panchayat/${formData.id}` : "${URL}/api/new-panchayat",
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -141,7 +146,7 @@ const GramPanchayat = () => {
         if (!window.confirm("Are you sure you want to delete this Panchayat?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:5555/api/panchayat/${id}`, {
+            const response = await fetch(`${URL}/api/panchayat/${id}`, {
              method: "DELETE",
             });
 

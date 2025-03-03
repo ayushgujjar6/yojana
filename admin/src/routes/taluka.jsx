@@ -17,12 +17,15 @@ const Taluka = () => {
     const marathinameRef = useRef();
     const pincodeRef = useRef();
     const statusInputRef = useRef();
+
+    
+    const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
     
 
     // Fetch taluka data from the backend
     const fetchtaluka = async () => {
         try {
-            const response = await fetch("http://localhost:5555/api/taluka");
+            const response = await fetch(`${URL}/api/taluka`);
             const data = await response.json();
             setTalukaData(data);
         } catch (error) {
@@ -58,7 +61,7 @@ const Taluka = () => {
 
         try {
             const response = await fetch(
-                formData?.taluka_id ? `http://localhost:5555/api/taluka/${formData.taluka_id}` : "http://localhost:5555/api/new-taluka",
+                formData?.taluka_id ? `${URL}/api/taluka/${formData.taluka_id}` : `${URL}/api/new-taluka`,
                 {
                     method: formData?.taluka_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -88,7 +91,7 @@ const Taluka = () => {
         if (!window.confirm("Are you sure you want to delete this taluka?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:5555/api/taluka/${id}`, {
+            const response = await fetch(`${URL}/api/taluka/${id}`, {
              method: "DELETE",
             });
 

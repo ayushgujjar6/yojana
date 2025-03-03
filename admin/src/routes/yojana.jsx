@@ -13,6 +13,10 @@ const Yojana = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
+
+    
+    const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
+
     // Input Refs
     const categoryRef = useRef();
     const subCategoryRef = useRef();
@@ -24,7 +28,7 @@ const Yojana = () => {
     // Fetch Yojana data from the backend
     const fetchYojana = async () => {
         try {
-            const response = await fetch("http://localhost:5555/api/yojana");
+            const response = await fetch(`${URL}/api/yojana`);
             const data = await response.json();
             setYojanaData(data);
         } catch (error) {
@@ -64,7 +68,7 @@ const Yojana = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `http://localhost:5555/api/yojana/${formData.id}` : "http://localhost:5555/api/new-yojana",
+                formData?.id ? `${URL}/api/yojana/${formData.id}` : `${URL}/api/new-yojana`,
                 {
                     method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -94,7 +98,7 @@ const Yojana = () => {
         if (!window.confirm("Are you sure you want to delete this Yojana?")) 
             return;
         try {
-            const response = await fetch(`http://localhost:5555/api/yojana/${id}`, {
+            const response = await fetch(`${URL}/api/yojana/${id}`, {
              method: "DELETE",
             });
 

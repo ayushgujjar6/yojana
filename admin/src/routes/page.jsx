@@ -6,11 +6,14 @@ const DashboardPage = () => {
     const [yojana, setYojana] = useState([]);
     const [showYojana, setShowYojana] = useState(false); // State to toggle views
 
+    
+    const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
+
     // Fetch Total Yojana
     useEffect(() => {
         const fetchTotalYojana = async () => {
             try {
-                const response = await fetch("http://localhost:5555/api/total-yojana");
+                const response = await fetch(`${URL}/api/total-yojana`);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
                 setTotalYojana(data.totalYojana);
@@ -25,7 +28,7 @@ const DashboardPage = () => {
     // Fetch Yojanas
     const handleYojana = async () => {
         try {
-            const response = await fetch("http://localhost:5555/api/yojana");
+            const response = await fetch(`${URL}/api/yojana`);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const data = await response.json();
             setYojana(data);
