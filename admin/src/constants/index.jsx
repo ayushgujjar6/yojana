@@ -19,16 +19,30 @@ export const navbarLinks = [
         title: "Schemes",
         links: [
             {
+                label: "Category",
+                icon: Package,
+                path: "/category",
+            },
+            {
+                label: "Sub Category",
+                icon: Package,
+                path: "/subcategory",
+            },
+            {
                 label: "Yojana",
                 icon: Package,
                 path: "/yojana",
             },
-            
-            // {
-            //     label: "Inventory",
-            //     icon: ShoppingBag,
-            //     path: "/inventory",
-            // },
+            {
+                label: "Yojana Vice Documet",
+                icon: ShoppingBag,
+                path: "/document-yojana",
+            },
+            {
+                label: "Document",
+                icon: ShoppingBag,
+                path: "/document",
+            },
         ],
     },
     {

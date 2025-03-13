@@ -184,7 +184,7 @@ const Taluka = () => {
                                 {currentItems.length > 0 ? (
                                     currentItems.map((taluka, index) => (
                                         <tr key={taluka.taluka_id} className="table-row">
-                                            <td className="table-cell">{index + 1}</td>
+                                            <td className="table-cell">{indexOfFirstItem + index + 1}</td>
                                             <td className="table-cell">{taluka.taluka_name_eng}</td>
                                             <td className="table-cell">{taluka.taluka_name_marathi}</td>
                                             <td className="table-cell">{taluka.pincode}</td>

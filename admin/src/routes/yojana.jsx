@@ -174,7 +174,7 @@ const Yojana = () => {
                             <thead className="table-header">
                                 <tr className="table-row">
                                     <th className="table-head">ID</th>
-                                    <th className="table-head">Yojana Type</th>
+                                    <th className="table-head">Yojana Category</th>
                                     <th className="table-head">Status</th>
                                     <th className="table-head">Actions</th>
                                 </tr>
@@ -183,7 +183,7 @@ const Yojana = () => {
                                 {currentItems.length > 0 ? (
                                     currentItems.map((yojana, index) => (
                                         <tr key={yojana.id} className="table-row">
-                                            <td className="table-cell">{index + 1}</td>
+                                            <td className="table-cell">{indexOfFirstItem + index + 1}</td>
                                             <td className="table-cell">{yojana.yojana_type}</td>
                                             <td className="table-cell">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit

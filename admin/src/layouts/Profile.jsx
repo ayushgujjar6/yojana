@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const Profile = () => {
+const Profile = ({onImageSelect}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null); // Store user data
   const dropdownRef = useRef(null);
+  const [selectedImg, setSelectedImg] = useState(null);
 
   useEffect(() => {
     // Fetch user data when component mounts
@@ -45,6 +46,11 @@ const Profile = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0]
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>

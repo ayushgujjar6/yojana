@@ -12,8 +12,8 @@ const Village = () => {
     const [panchayatData, setPanchayatData] = useState([]); // Store fetched data
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState(null); // Stores current form data (for editing)
-    const [selectedTaluka, setSelectedTaluka] = useState(null);
-    const [selectedPanchayat, setSelectedPanchayat] = useState(null);
+    const [selectedTaluka, setSelectedTaluka] = useState('All');
+    const [selectedPanchayat, setSelectedPanchayat] = useState('All');
     const [villageData, setVillageData] = useState([]);
 
 
@@ -57,29 +57,37 @@ const Village = () => {
 
     const fetchvillage = async (taluka_id, panchayat_id) => {
         try {
-            if(!taluka_id || !panchayat_id){
-                return ;
+            let url = `${URL}/api/village`;
+    
+            if (taluka_id !== "All" && panchayat_id === "All") {
+                url = `${URL}/api/village/taluka/${taluka_id}`;
+            } else if (taluka_id !== "All" && panchayat_id !== "All") {
+                url = `${URL}/api/village/panchayat/${panchayat_id}`;
             }
-            const response = await fetch(`${URL}/api/village/${taluka_id}/${panchayat_id}`);
-            const data = await  response.json();
+    
+            const response = await fetch(url);
+            const data = await response.json();
             setVillageData(data);
         } catch (error) {
-            console.error("Error fetching data:", error);
+            console.error("Error fetching villages:", error);
         }
     };
+    
 
     
     
 
 
     useEffect(() => {
-        fetchtaluka();// Load data on component mount
-        const storedTaluka = localStorage.getItem("SelectedTaluka");
-        if(storedTaluka){
-            setSelectedTaluka(storedTaluka);
-            fetchpanchayat(storedTaluka);
-        }
+        const storedTaluka = localStorage.getItem("SelectedTaluka") || "All";
+        const storedPanchayat = localStorage.getItem("SelectedPanchayat") || "All";
+        
+        setSelectedTaluka(storedTaluka);
+        setSelectedPanchayat(storedPanchayat);
+        
+        fetchvillage(storedTaluka, storedPanchayat);
     }, []);
+    
 
 
     useEffect(() => {
@@ -92,6 +100,10 @@ const Village = () => {
     }, []);
 
     useEffect(() => {
+        fetchtaluka();
+    });
+    
+    useEffect(() => {
         fetchpanchayat(selectedTaluka);
     }, [selectedTaluka]);
 
@@ -100,19 +112,20 @@ const Village = () => {
     }, [selectedTaluka, selectedPanchayat]);
 
 
-    const handleTalukaChange = async (event) => {
+    const handleTalukaChange = (event) => {
         const taluka_id = event.target.value;
         setSelectedTaluka(taluka_id);
         localStorage.setItem("SelectedTaluka", taluka_id);
-        await fetchpanchayat(taluka_id);
-    }
-
-    const handlePanchayatChange = async (event) => {
+        fetchvillage(taluka_id, selectedPanchayat);
+    };
+    
+    const handlePanchayatChange = (event) => {
         const panchayat_id = event.target.value;
         setSelectedPanchayat(panchayat_id);
         localStorage.setItem("SelectedPanchayat", panchayat_id);
-        await fetchvillage(selectedTaluka, panchayat_id);
-    }
+        fetchvillage(selectedTaluka, panchayat_id);
+    };
+    
 
 
 
@@ -220,22 +233,20 @@ const Village = () => {
             
 
             <div className="flex flex-row space-x-3 ">
-                <select ref={taluka_idRef} onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
-                    <option value="">Select Taluka</option>
+                <select onChange={handleTalukaChange} value={selectedTaluka} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
+                    <option value="All">All Taluka</option>
                     {talukaData.map(taluka => (
-                        <option key={taluka.taluka_id} value={taluka.taluka_id}>
-                            {taluka.taluka_name_eng}
-                        </option>
+                        <option key={taluka.taluka_id} value={taluka.taluka_id}>{taluka.taluka_name_eng}</option>
                     ))}
                 </select>
-                <select ref={panchayat_idRef} onChange={handlePanchayatChange} value={selectedPanchayat} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
-                    <option value="">Select Panchayat</option>
+
+                <select onChange={handlePanchayatChange} value={selectedPanchayat} className="w-[200px] h-[30px] rounded-md outline outline-2  outline-slate-200 dark:bg-slate-800 dark:text-white">
+                    <option value="All">All Panchayat</option>
                     {panchayatData.map(panchayat => (
-                        <option key={panchayat.panchayat_id} value={panchayat.panchayat_id}>
-                            {panchayat.panchayat_eng}
-                        </option>
+                        <option key={panchayat.id} value={panchayat.id}>{panchayat.panchayat_eng}</option>
                     ))}
                 </select>
+
             </div>
 
             {/* Table to Display panchayat Data */}
@@ -255,7 +266,7 @@ const Village = () => {
                                 {villageData.length > 0 ? (
                                     villageData.map((village, index) => (
                                         <tr key={village.id} className="table-row">
-                                            <td className="table-cell">{index + 1}</td>
+                                            <td className="table-cell">{indexOfFirstItem + index + 1}</td>
                                             <td className="table-cell">{village.village_eng}</td>
                                             <td className="table-cell">{village.village_marathi}</td>   
                                             <td className="table-cell">

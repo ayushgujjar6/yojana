@@ -240,7 +240,7 @@ const GramPanchayat = () => {
                                 {currentItems.length > 0 ? (
                                     currentItems.map((panchayat, index) => (
                                         <tr key={panchayat.id} className="table-row">
-                                            <td className="table-cell">{index + 1}</td>
+                                            <td className="table-cell">{indexOfFirstItem + index + 1}</td>
                                             <td className="table-cell">{panchayat.panchayat_eng}</td>
                                             <td className="table-cell">{panchayat.panchayat_marathi}</td>
                                             <td className="table-cell">{panchayat.taluka_name_eng || panchayat.taluka_id}</td>
