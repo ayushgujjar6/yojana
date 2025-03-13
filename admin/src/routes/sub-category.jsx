@@ -76,23 +76,27 @@ const Subcategory = () => {
             status: statusInputRef.current.value,
         };
 
+        
+
         try {
             const response = await fetch(
-                formData?.id ? `${URL}/api/subcategory/${formData.id}` : `${URL}/api/new-subcategory`,
+                formData?.subcategory_id ? `${URL}/api/subcategory/${formData.subcategory_id}` : `${URL}/api/new-subcategory`,
                 {
-                    method: formData?.id ? "PUT" : "POST",
+                    method: formData?.subcategory_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newSubCategory),
                 }
             );
 
+            console.log(response);
+
             if (!response.ok) throw new Error("Failed to save subcategory");
 
             await fetchSubCategory(); // Refresh the list after adding/updating
             handleCloseForm();
-            toast.success(formData?.id ? "Subcategory updated!" : "New subcategory added!");
+            toast.success(formData?.subcategory_id ? "Subcategory updated!" : "New subcategory added!");
         } catch (error) {
-            console.error("Error saving subcategory:", error);
+            console.error("Error saving subcategory:", e);
         }
     };
 
@@ -116,7 +120,7 @@ const Subcategory = () => {
                  throw new Error("Failed to delete");
             }
 
-            setSubCategoryData((prevData) => prevData.filter((subcategory) => subcategory.id !== id));
+            setSubCategoryData((prevData) => prevData.filter((subcategory) => subcategory.subcategory_id !== id));
 
             toast.success("Subcategory deleted!");
             await fetchSubCategory();
@@ -185,8 +189,8 @@ const Subcategory = () => {
                             <thead className="table-header">
                                 <tr className="table-row">
                                     <th className="table-head">ID</th>
-                                    <th className="table-head">Category</th>
                                     <th className="table-head">Sub Category</th>
+                                    <th className="table-head">Category</th>
                                     <th className="table-head">Status</th>
                                     <th className="table-head">Actions</th>
                                 </tr>
@@ -198,8 +202,8 @@ const Subcategory = () => {
                                         return (
                                             <tr key={subcategory.id} className="table-row">
                                                 <td className="table-cell">{indexOfFirstItem + index + 1}</td>
-                                                <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
                                                 <td className="table-cell">{subcategory.subcategory_name}</td>
+                                                <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
                                                 <td className="table-cell">
                                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                         ${subcategory.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>

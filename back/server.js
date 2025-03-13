@@ -195,13 +195,13 @@ app.delete("/api/subcategory/:id", (req, res) => {
 
 app.put("/api/subcategory/:id", (req, res) => {
     const { subcategory_name, category_id, status } = req.body;
-    const { subcategory_id} = req.params;
+    const {id} = req.params;
 
     const sql = `UPDATE sub_category 
                  SET subcategory_name = ?, category_id = ?, status = ? , update_date_time = NOW()  
                  WHERE subcategory_id = ?`;
 
-    db.query(sql, [subcategory_name, category_id ,status ,id], (err, res) => {
+    db.query(sql, [subcategory_name, category_id ,status ,id], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -225,17 +225,17 @@ app.get('/api/yojana', (req,res) => {
 
 
 app.post("/api/new-yojana", (req, res) => {
-    const {category_id,subcategory_id,yojana_type, status, description, link } = req.body;
+    const {category_id, subcategory_id, yojana_type, amount, status, description, link } = req.body;
 
-    if (!category_id || !subcategory_id || !yojana_type || !status || !description || !link) {
+    if (!category_id || !subcategory_id || !yojana_type || !amount || !status || !description || !link) {
         console.error("Validation Error: Missing fields");
         return res.status(400).json({ error: "All fields are required!" });
     }
 
-    const sql = `INSERT INTO tbl_yojana_type (category_id, subcategory_id, yojana_type, status, description, link, ins_date_time, update_date_time) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const sql = `INSERT INTO tbl_yojana_type (category_id, subcategory_id, yojana_type, amount, status, description, link, ins_date_time, update_date_time) VALUES (?, ?,?,?, ?, ?, ?, NOW(), NOW())`;
     
 
-    db.query(sql, [category_id,subcategory_id,yojana_type, status, description, link], (err, result) => {
+    db.query(sql, [category_id, subcategory_id,yojana_type, amount, status, description, link], (err, result) => {
         if (err) {
             console.error("Database Insert Error:", err);  // Debugging
             return res.status(500).json({ error: "Failed to add yojana", details: err.message });
@@ -269,7 +269,7 @@ app.put("/api/yojana/:id", (req, res) => {
     const { yojana_type, status, description, link } = req.body;
 
     const sql = `UPDATE tbl_yojana_type 
-                 SET yojana_type = ?, status = ?, description = ?, link = ?, update_date_time = NOW() 
+                 SET yojana_type = ?,amount = ?,  status = ?, description = ?, link = ?, update_date_time = NOW() 
                  WHERE yojana_type_id = ?`;
 
     db.query(sql, [yojana_type, status, description, link, id], (err, result) => {
@@ -282,7 +282,7 @@ app.put("/api/yojana/:id", (req, res) => {
 });
 
 
-//------------------------------------------Document--------------------------------------------------
+//------------------------------------------Document-Yojana--------------------------------------------------
 
 app.get('/api/document-yojana', (req,res) => {
     db.query("SELECT * FROM document_yojana", (err,result) => {
@@ -458,7 +458,7 @@ app.post("/api/new-taluka", (req, res) => {
             console.error("Database Insert Error:", err);  // Debugging
             return res.status(500).json({ error: "Failed to add yojana", details: err.message });
         }
-        res.json({ message: "Yojana added successfully", id: result.insertId });
+        res.json({ message: "Taluka added successfully", id: result.insertId });
     });
 });
 
@@ -476,7 +476,7 @@ app.delete("/api/taluka/:id", (req, res) => {
             res.status(404).json({ message: "Yojana not found" });
             return;
         }
-        res.json({ message: "Yojana deleted successfully" });
+        res.json({ message: "Taluka deleted successfully" });
     });
 });
 
@@ -495,7 +495,7 @@ app.put("/api/taluka/:id", (req, res) => {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json({ message: "Yojana updated successfully" });
+        res.json({ message: "Taluka updated successfully" });
     });
 });
 
@@ -560,16 +560,16 @@ app.delete("/api/panchayat/:id", (req, res) => {
 
 
 app.put("/api/panchayat/:id", (req, res) => {
-    const { taluka_name_eng, taluka_name_marathi, status } = req.body;
+    const { panchayat_eng, panchayat_marathi, taluka_id, status } = req.body;
     const { id } = req.params;
 
     const sql = `UPDATE gram_panchayat 
-                 SET panchayat_eng = ?, panchayat_marathi = ?, status = ? , update_date_time = NOW()  
+                 SET panchayat_eng = ?, panchayat_marathi = ?, taluka_id = ? , status = ? , update_date_time = NOW()  
                  WHERE panchayat_id = ?`;
 
-    db.query(sql, [panchayat_eng, panchayat_marathi,status ,id], (err, result) => {
+    db.query(sql, [panchayat_eng, panchayat_marathi,taluka_id, status ,id], (err, result) => {
         if (err) {
-            res.status(500).json({ error: err.message });
+            result.status(500).json({ error: err.message });
             return;
         }
         res.json({ message: "Panchayat updated successfully" });

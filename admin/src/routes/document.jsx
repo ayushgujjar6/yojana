@@ -64,17 +64,13 @@ const Document = () => {
             status: statusInputRef.current.value,
         };
 
-        if(formData && formData.id){
-            newDocument.id = formData.id;
-        }
-
         console.log("Submitting Data:", newDocument);
 
         try {
             const response = await fetch(
-                formData && formData?.id ? `${URL}/api/document/${formData.id}` : `${URL}/api/new-document`,
+                formData?.document_id ? `${URL}/api/document/${formData.document_id}` : `${URL}/api/new-document`,
                 {
-                    method: formData && formData?.id ? "PUT" : "POST",
+                    method: formData?.document_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newDocument),
                 }
@@ -84,7 +80,7 @@ const Document = () => {
 
             await fetchDocument(); // Refresh the list after adding/updating
             handleCloseForm();
-            toast.success(formData && formData?.id ? "document updated!" : "New document added!");
+            toast.success(formData?.document_id ? "document updated!" : "New document added!");
         } catch (error) {
             console.error("Error saving document:", error);
         }

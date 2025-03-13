@@ -5,22 +5,27 @@ import { useTheme } from "@/hooks/use-theme";
 
 const Yojana = () => {
     const { theme } = useTheme();
-    const [yojanaData, setYojanaData] = useState([]); // Store fetched data
+    const [yojanaData, setYojanaData] = useState([]); 
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState(null); // Stores current form data (for editing)
+    const [formData, setFormData] = useState(null); 
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [filteredData, setFilteredData] = useState([]); 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
+    const [categoryData, setCategoryData] = useState([]);
+    const [subCategoryData, setSubCategoryData] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(""); 
+    const [filteredSubcategories, setFilteredSubcategories] = useState([]); 
 
 
     
     const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
 
     // Input Refs
-    const categoryRef = useRef();
-    const subCategoryRef = useRef();
+    const categoryIDRef = useRef();
+    const subCategoryIDRef = useRef();
     const nameInputRef = useRef();
+    const amountRef = useRef();
     const linkInputRef = useRef();
     const detailsInputRef = useRef();
     const statusInputRef = useRef();
@@ -40,6 +45,40 @@ const Yojana = () => {
         fetchYojana(); // Load data on component mount
     }, []);
 
+    const fetchSubCategory = async () => {
+            try {
+                const response = await fetch(`${URL}/api/subcategory`);
+                const data = await response.json();
+                setSubCategoryData(data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+    
+        useEffect(() => {
+            fetchSubCategory(); // Load data on component mount
+        }, []);
+
+
+
+    const fetchCategory = async () => {
+            try {
+                const response = await fetch(`${URL}/api/category`);
+                const data = await response.json();
+                setCategoryData(data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+    
+    useEffect(() => {
+        fetchCategory(); // Load data on component mount
+    }, []);
+        
+    
+    
+    
+
     
 
     //  Handle opening and closing the form
@@ -58,9 +97,10 @@ const Yojana = () => {
         e.preventDefault();
 
         const newYojana = {
-            category_id: categoryRef.current.value,
-            sub_category_id: subCategoryRef.current.value,
+            category_id: categoryIDRef.current.value,
+            sub_category_id: subCategoryIDRef.current.value,
             yojana_type: nameInputRef.current.value,
+            amount : amountRef.current.value,
             status: statusInputRef.current.value,
             description: detailsInputRef.current.value,
             link: linkInputRef.current.value,
@@ -130,6 +170,17 @@ const Yojana = () => {
     }, [selectedStatus, yojanaData]);
 
 
+
+    const handleCategoryChange = (event) => {
+        const categoryId = Number(event.target.value);
+        setSelectedCategory(categoryId); 
+    
+        const filtered = subCategoryData.filter(sub => sub.category_id === categoryId);
+        setFilteredSubcategories(filtered);
+    };
+    
+
+
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -174,17 +225,27 @@ const Yojana = () => {
                             <thead className="table-header">
                                 <tr className="table-row">
                                     <th className="table-head">ID</th>
-                                    <th className="table-head">Yojana Category</th>
+                                    <th className="table-head">Category</th>
+                                    <th className="table-head">Sub Category</th>
+                                    <th className="table-head">Yojana</th>
+                                    <th className="table-head">Amount</th>
                                     <th className="table-head">Status</th>
                                     <th className="table-head">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="table-body">
                                 {currentItems.length > 0 ? (
-                                    currentItems.map((yojana, index) => (
+                                    currentItems.map((yojana, index) => {
+                                        const category = categoryData.find(cat => cat.category_id == yojana.category_id);
+                                        const sub_category = subCategoryData.find(cat => cat.subcategory_id == yojana.subcategory_id);
+                                        
+                                        return (
                                         <tr key={yojana.id} className="table-row">
                                             <td className="table-cell">{indexOfFirstItem + index + 1}</td>
+                                            <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
+                                            <td className="table-cell">{sub_category ? sub_category.subcategory_name : 'N/A'}</td>
                                             <td className="table-cell">{yojana.yojana_type}</td>
+                                            <td className="table-cell">{yojana.amount}</td>
                                             <td className="table-cell">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                     ${yojana.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
@@ -201,8 +262,9 @@ const Yojana = () => {
                                                         </button>
                                                 </div>
                                             </td>
-                                        </tr>
-                                    ))
+                                         </tr>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
                                         <td colSpan="6" className="text-center p-4">No data available</td>
@@ -227,9 +289,40 @@ const Yojana = () => {
                             <SquareX className="mb-3" />
                         </button>
                         <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
+
+                            {/* Dropdown for category selection */}
+                            <select 
+                                ref={categoryIDRef} 
+                                onChange={handleCategoryChange} 
+                                required 
+                                className="w-full p-2 border rounded-md"
+                            >
+                                <option value="">Select Category</option>
+                                {categoryData.map(category => (
+                                    <option key={category.category_id} value={category.category_id}>
+                                        {category.category_name}
+                                    </option>
+                                ))}
+                            </select>
+                            {/* Dropdown for sub category */}
+                            <select 
+                                ref={subCategoryIDRef} 
+                                required 
+                                className="w-full p-2 border rounded-md"
+                            >
+                                <option value="">Select Sub Category</option>
+                                    {filteredSubcategories.length > 0 ? (
+                                        filteredSubcategories.map(sub => (
+                                            <option key={sub.subcategory_id} value={sub.subcategory_id}>
+                                                {sub.subcategory_name}
+                                            </option>
+                                        ))
+                                    ) : (
+                                        <option disabled>No subcategories available</option>
+                                    )}
+                            </select>
                             <input ref={nameInputRef} type="text" placeholder="New Yojana Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.yojana_type || ""} />
-                            <input ref={categoryRef} type="text" placeholder="Yojana Category" required className="w-full p-2 border rounded-md" defaultValue={formData?.category_id || ""} />
-                            <input ref={subCategoryRef} type="text" placeholder="Sub Category" required className="w-full p-2 border rounded-md" defaultValue={formData?.sub_category_id || ""} />
+                            <input ref={amountRef} type="number" placeholder="Amount" required className="w-full p-2 border rounded-md" defaultValue={formData?.amount || ""} />
                             <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
                                 <option value="Active">Active</option>
                                 <option value="Deactive">Deactive</option>

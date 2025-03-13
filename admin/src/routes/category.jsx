@@ -41,7 +41,7 @@ const Category = () => {
     
 
     //  Handle opening and closing the form
-    const handleOpenForm = () => {
+    const handleOpenForm = (category) => {
         setFormData(category); // Clear form data when adding a new Yojana
         setShowForm(true);
         setTimeout(() => {
@@ -66,9 +66,9 @@ const Category = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `${URL}/api/category/${formData.id}` : `${URL}/api/new-category`,
+                formData?.category_id ? `${URL}/api/category/${formData.category_id}` : `${URL}/api/new-category`,
                 {
-                    method: formData?.id ? "PUT" : "POST",
+                    method: formData?.category_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newCategory),
                 }
@@ -76,23 +76,11 @@ const Category = () => {
 
             if (!response.ok) throw new Error("Failed to save category");
 
-            if (formData?.id) {
-                setCategoryData((prevData) =>
-                    prevData.map((item) =>
-                        item.id === formData.id
-                            ? { ...item, ...newCategory }
-                            : item
-                    )
-                );
-                toast.success("Category updated successfully");
-            } else {
-                const newCat = await response.json();
-                setCategoryData((prevData) => [...prevData, newCat]);
-                toast.success("New Category added successfully");
-            }
+            await fetchCategory();
+
             handleCloseForm();
-            console.log(formData?.id ? "Category updated successfully" : "New Category added successfully");
-            toast.success(formData?.id ? "Category updated" : "New Category added");
+            console.log(formData?.category_id ? "Category updated successfully" : "New Category added successfully");
+            toast.success(formData?.category_id ? "Category updated" : "New Category added");
             
         } catch (error) {
             console.error("Error saving Category:", error);

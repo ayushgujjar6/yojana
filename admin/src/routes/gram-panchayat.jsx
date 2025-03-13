@@ -111,9 +111,9 @@ const GramPanchayat = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `${URL}/api/panchayat/${formData.id}` : "${URL}/api/new-panchayat",
+                formData?.panchayat_id ? `${URL}/api/panchayat/${formData.panchayat_id}` : `${URL}/api/new-panchayat`,
                 {
-                    method: formData?.id ? "PUT" : "POST",
+                    method: formData?.panchayat_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newpanchayat),
                 }
@@ -125,7 +125,7 @@ const GramPanchayat = () => {
 
 
             handleCloseForm();
-            console.log(formData?.id ? "Panchayat updated successfully" : "New Panchayat added successfully");
+            console.log(formData?.panchayat_id ? "Panchayat updated successfully" : "New Panchayat added successfully");
         } catch (error) {
             console.error("Error saving panchayat:", error);
         }
@@ -238,12 +238,14 @@ const GramPanchayat = () => {
 
                         <tbody className="table-body">
                                 {currentItems.length > 0 ? (
-                                    currentItems.map((panchayat, index) => (
+                                    currentItems.map((panchayat, index) => {
+                                        const taluka = talukaData.find(cat => cat.taluka_id == panchayat.taluka_id);
+                                        return (
                                         <tr key={panchayat.id} className="table-row">
                                             <td className="table-cell">{indexOfFirstItem + index + 1}</td>
                                             <td className="table-cell">{panchayat.panchayat_eng}</td>
                                             <td className="table-cell">{panchayat.panchayat_marathi}</td>
-                                            <td className="table-cell">{panchayat.taluka_name_eng || panchayat.taluka_id}</td>
+                                            <td className="table-cell">{taluka ? taluka.taluka_name_eng : 'N/A'}</td>
                                             <td>
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                     ${panchayat.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
@@ -261,7 +263,8 @@ const GramPanchayat = () => {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
+                                    );
+                                    })
                                 ) : (
                                     <tr>
                                         <td colSpan="7" className="text-center p-4">No data available</td>
