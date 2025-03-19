@@ -107,26 +107,30 @@ const Subcategory = () => {
     };
 
     // Handle Delete
-    const deleteSubCategory = async (id) => {
-        console.log("Deleting subcategory with id:", id);
-        if (!window.confirm("Are you sure you want to delete this Sub Category?")) 
-            return;
+    const deactiveSubCategory = async (id) => {
+        console.log("Deactivating subcategory with id:", id);
+        
         try {
-            const response = await fetch(`${URL}/api/subcategory/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/subcategory/deactive/${id}`, {
+             method: "PUT",
+             headers: { "Content-Type": "application/json" },
             });
 
-            if (!response.ok){
-                 throw new Error("Failed to delete");
-            }
-
-            setSubCategoryData((prevData) => prevData.filter((subcategory) => subcategory.subcategory_id !== id));
-
-            toast.success("Subcategory deleted!");
+            if (!response.ok) throw new Error("Failed to deactivate");
+    
+            setSubCategoryData((prevData) => 
+                prevData.map((subcategory) =>
+                    subcategory.subcategory_id === id ? { ...subcategory, status: "Deactive" } : subcategory
+                )
+            );
+    
+            console.log("Sub Category deactivated successfully!");
+            toast.success("Sub Category deactivated successfully");
             await fetchSubCategory();
+
         } catch (error) {
-            console.error("Error deleting subcategory:", error);
-            toast.error("Failed to Delete");
+            console.error("Error deactivating Sub Category:", error);
+            toast.error("Error deactivating Sub category");
         }
     };
 
@@ -215,7 +219,7 @@ const Subcategory = () => {
                                                             <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(subcategory)}>
                                                                 <PencilLine size={20} />
                                                             </button>
-                                                            <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deleteSubCategory(subcategory.subcategory_id)}>
+                                                            <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactiveSubCategory(subcategory.subcategory_id)}>
                                                                 <Trash size={20} />
                                                             </button>
                                                     </div>

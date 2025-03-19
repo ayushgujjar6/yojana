@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 
 const Taluka = () => {
@@ -86,25 +86,30 @@ const Taluka = () => {
     };
 
     // Handle Delete
-    const deletetaluka = async (id) => {
-        console.log("Deleting taluka with id:", id);
-        if (!window.confirm("Are you sure you want to delete this taluka?")) 
-            return;
+    const deactivateTaluka = async (id) => {
+        console.log("Deactivating taluka with id:", id);
+       
         try {
-            const response = await fetch(`${URL}/api/taluka/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/taluka/deactive/${id}`, {
+             method: "PUT",
+             headers : {"Content-Type":"application/json"},
             });
 
             if (!response.ok){
-                 throw new Error("Failed to delete");
+                 throw new Error("Failed to Deactive");
             }
 
-            setTalukaData((prevData) => prevData.filter((taluka) => taluka.id !== id));
+            setTalukaData((prevData) => 
+                prevData.map((taluka) =>
+                    taluka.taluka_id === id ? { ...taluka, status: "Deactive" } : taluka
+                )
+            );
+    
 
-            console.log("Taluka deleted successfully!");
+            console.log("Taluka deactivatef successfully!");
             await fetchtaluka();
         } catch (error) {
-            console.error("Error deleting taluka:", error);
+            console.error("Error Deactivating taluka:", error);
         }
     };
 
@@ -199,8 +204,8 @@ const Taluka = () => {
                                                     <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(taluka)}>
                                                         <PencilLine size={20} />
                                                     </button>
-                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deletetaluka(taluka.taluka_id)}>
-                                                        <Trash size={20} />
+                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactivateTaluka(taluka.taluka_id)}>
+                                                        <ShieldOff size={20} />
                                                     </button>
                                                 </div>
                                             </td>

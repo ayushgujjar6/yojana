@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 
 // import { Search } from "../layouts/search";
@@ -15,6 +15,9 @@ const Village = () => {
     const [selectedTaluka, setSelectedTaluka] = useState('All');
     const [selectedPanchayat, setSelectedPanchayat] = useState('All');
     const [villageData, setVillageData] = useState([]);
+  
+   
+
 
 
 
@@ -59,10 +62,11 @@ const Village = () => {
         try {
             let url = `${URL}/api/village`;
     
-            if (taluka_id !== "All" && panchayat_id === "All") {
-                url = `${URL}/api/village/taluka/${taluka_id}`;
-            } else if (taluka_id !== "All" && panchayat_id !== "All") {
-                url = `${URL}/api/village/panchayat/${panchayat_id}`;
+            if (taluka_id !== "All") {
+                url += `/${taluka_id}`;
+            }
+            if (panchayat_id !== "All") {
+                url += `/${panchayat_id}`;
             }
     
             const response = await fetch(url);
@@ -73,62 +77,48 @@ const Village = () => {
         }
     };
     
+    
+    
+    
 
     
     
 
-
-    useEffect(() => {
-        const storedTaluka = localStorage.getItem("SelectedTaluka") || "All";
-        const storedPanchayat = localStorage.getItem("SelectedPanchayat") || "All";
-        
-        setSelectedTaluka(storedTaluka);
-        setSelectedPanchayat(storedPanchayat);
-        
-        fetchvillage(storedTaluka, storedPanchayat);
-    }, []);
-    
-
-
-    useEffect(() => {
-        // Load data on component mount
-        const storedPanchayat = localStorage.getItem("SelectedPanchayat");
-        if(storedPanchayat){
-            setSelectedPanchayat(storedPanchayat);
-            fetchvillage(storedPanchayat);
-        }
-    }, []);
 
     useEffect(() => {
         fetchtaluka();
-    });
+    }, []); // Runs only once on mount
     
     useEffect(() => {
         fetchpanchayat(selectedTaluka);
-    }, [selectedTaluka]);
-
+    }, [selectedTaluka]); // Runs when Taluka changes
+    
     useEffect(() => {
-        fetchvillage(selectedTaluka, selectedPanchayat);
-    }, [selectedTaluka, selectedPanchayat]);
-
+        if (selectedPanchayat !== null) {
+            fetchvillage(selectedTaluka, selectedPanchayat);
+        }
+    }, [selectedTaluka]);
+    
 
     const handleTalukaChange = (event) => {
         const taluka_id = event.target.value;
         setSelectedTaluka(taluka_id);
         localStorage.setItem("SelectedTaluka", taluka_id);
+        
+        fetchpanchayat(taluka_id); // Fetch Panchayats for this Taluka
         fetchvillage(taluka_id, selectedPanchayat);
     };
-    
+
     const handlePanchayatChange = (event) => {
         const panchayat_id = event.target.value;
         setSelectedPanchayat(panchayat_id);
         localStorage.setItem("SelectedPanchayat", panchayat_id);
+    
+        // Ensure fetchvillage gets the latest state
         fetchvillage(selectedTaluka, panchayat_id);
     };
     
-
-
-
+    
 
 
 
@@ -174,8 +164,6 @@ const Village = () => {
     
             if (!response.ok) throw new Error("Failed to save Village");
     
-            const updatedVillage = await response.json();
-    
             
             await fetchvillage(selectedTaluka, selectedPanchayat);
     
@@ -199,28 +187,34 @@ const Village = () => {
         setShowForm(true);
     };
 
-    // Handle Delete
-    const deletevillage = async (id) => {
-        console.log("Deleting village with id:", id);
-        if (!window.confirm("Are you sure you want to delete this village?")) 
-            return;
+    // Handle Deactive
+    const deactiveVillage = async (id) => {
+        console.log("Deactivating village with id:", id);
+      
         try {
-            const response = await fetch(`${URL}/api/village/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/deactive/village/${id}`, {
+             method: "PUT",
+             headers:{"Content-Type":"application/json"},
             });
 
             if (!response.ok){
-                 throw new Error("Failed to delete");
+                 throw new Error("Failed to Deactive");
             }
 
-            setVillageData((prevData) => prevData.filter((village) => village.id !== id));
-
-            console.log("Village deleted successfully!");
+            setVillageData((prevData) => 
+                prevData.map((village) =>
+                    village.village_id === id ? { ...village, status: "Deactive" } : village
+                )
+            );
+    
+            console.log("Village Deactived successfully!");
             await fetchvillage(selectedTaluka, selectedPanchayat);
         } catch (error) {
-            console.error("Error deleting village:", error);
+            console.error("Error Deactivating village:", error);
         }
     };
+
+    
 
     return (
         <div className="flex flex-col gap-y-4">
@@ -266,7 +260,7 @@ const Village = () => {
                                 {villageData.length > 0 ? (
                                     villageData.map((village, index) => (
                                         <tr key={village.id} className="table-row">
-                                            <td className="table-cell">{indexOfFirstItem + index + 1}</td>
+                                            <td className="table-cell">{index + 1}</td>
                                             <td className="table-cell">{village.village_eng}</td>
                                             <td className="table-cell">{village.village_marathi}</td>   
                                             <td className="table-cell">
@@ -274,8 +268,8 @@ const Village = () => {
                                                     <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(village)}>
                                                         <PencilLine size={20} />
                                                     </button>
-                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deletevillage(village.village_id)}>
-                                                        <Trash size={20} />
+                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactiveVillage(village.village_id)}>
+                                                        <ShieldOff size={20} />
                                                     </button>
                                                 </div>
                                             </td>
@@ -299,6 +293,34 @@ const Village = () => {
                                         <SquareX className="mb-3" />
                                     </button>
                                     <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
+                                    <select
+                                            required
+                                            value={selectedTaluka}
+                                            onChange={(e) => setSelectedTaluka(e.target.value)}
+                                            className="w-full p-2 border rounded-md"
+                                        >
+                                            <option value="">Select Taluka</option>
+                                            {talukaData.map((taluka) => (
+                                                <option key={taluka.taluka_id} value={taluka.taluka_id}>
+                                                    {taluka.taluka_name_eng}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <select
+                                            required
+                                            value={selectedPanchayat}
+                                            onChange={(e) => setSelectedPanchayat(e.target.value)}
+                                            className="w-full p-2 border rounded-md"
+                                            disabled={!selectedTaluka}
+                                        >
+                                            <option value="">Select Panchayat</option>
+                                            {panchayatData.map((panchayat) => (
+                                                <option key={panchayat.panchayat_id} value={panchayat.panchayat_id}>
+                                                    {panchayat.panchayat_eng}
+                                                </option>
+                                            ))}
+                                        </select>
                                         <input ref={village_engRef} type="text" placeholder="New Village Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.village_eng|| ""} />
                                         <input ref={village_marathiRef} type="text" placeholder="खेडे नवे नाव" required className="w-full p-2 border rounded-md" defaultValue={formData?.village_marathi|| ""} />
                                         <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md">

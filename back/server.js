@@ -77,7 +77,7 @@ app.get('/api/total-yojana', (req, res) => {
 
   //--------------------------------Category--------------------------------------------------------
 
-  app.get('/api/category', (req,res) => {
+app.get('/api/category', (req,res) => {
     db.query("SELECT * FROM category_yojana", (err,result) => {
         if(err){
             console.log("Error: ", err);
@@ -109,25 +109,6 @@ app.post("/api/new-category", (req, res) => {
 });
 
 
-app.delete("/api/category/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM category_yojana WHERE category_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting category:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Category not found" });
-            return;
-        }
-        res.json({ message: "Category deleted successfully" });
-    });
-});
-
-
-
 app.put("/api/category/:id", (req, res) => {
     const { id } = req.params;
     const { category_name, status } = req.body;
@@ -142,6 +123,28 @@ app.put("/api/category/:id", (req, res) => {
             return;
         }
         res.json({ message: "Category updated successfully" });
+    });
+});
+
+
+app.put("/api/category/deactive/:id", (req, res) => {
+    const { id } = req.params;
+    
+    const sql = `UPDATE category_yojana 
+                 SET status = 'Deactive', update_date_time = NOW() 
+                 WHERE category_id = ?`;
+
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error("Error deactivating category:", err);
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: "Category not found" });
+            return;
+        }
+        res.json({ message: "Category deactivated successfully" });
     });
 });
 
@@ -175,22 +178,22 @@ app.post('/api/new-subcategory', (req,res)=> {
 });
 
 
-app.delete("/api/subcategory/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM sub_category WHERE subcategory_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting subcategory:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "subcategory not found" });
-            return;
-        }
-        res.json({ message: "Subcategory deleted successfully" });
-    });
-});
+// app.delete("/api/subcategory/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM sub_category WHERE subcategory_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting subcategory:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "subcategory not found" });
+//             return;
+//         }
+//         res.json({ message: "Subcategory deleted successfully" });
+//     });
+// });
 
 
 app.put("/api/subcategory/:id", (req, res) => {
@@ -208,6 +211,28 @@ app.put("/api/subcategory/:id", (req, res) => {
         }
         res.json({ message: "Sub category updated successfully" });
     });
+});
+
+
+app.put("/api/subcategory/deactive/:id", (req, res) => {
+    const {id} = req.params;
+
+    const sql = `UPDATE sub_category 
+                 SET status = 'Deactive' , update_date_time = NOW()  
+                 WHERE subcategory_id = ?`;
+
+     db.query(sql, [id], (err, result) => {
+                    if (err) {
+                        console.error("Error deactivating Sub category:", err);
+                        res.status(500).json({ error: err.message });
+                        return;
+                    }
+                    if (result.affectedRows === 0) {
+                        res.status(404).json({ message: "Sub Category not found" });
+                        return;
+                    }
+                    res.json({ message: "Sub Category deactivated successfully" });
+                });            
 });
 
 
@@ -235,7 +260,7 @@ app.post("/api/new-yojana", (req, res) => {
     const sql = `INSERT INTO tbl_yojana_type (category_id, subcategory_id, yojana_type, amount, status, description, link, ins_date_time, update_date_time) VALUES (?, ?,?,?, ?, ?, ?, NOW(), NOW())`;
     
 
-    db.query(sql, [category_id, subcategory_id,yojana_type, amount, status, description, link], (err, result) => {
+    db.query(sql, [category_id, subcategory_id, yojana_type, amount, status, description, link], (err, result) => {
         if (err) {
             console.error("Database Insert Error:", err);  // Debugging
             return res.status(500).json({ error: "Failed to add yojana", details: err.message });
@@ -245,44 +270,62 @@ app.post("/api/new-yojana", (req, res) => {
 });
 
 
-app.delete("/api/yojana/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM tbl_yojana_type WHERE yojana_type_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting yojana:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Yojana not found" });
-            return;
-        }
-        res.json({ message: "Yojana deleted successfully" });
-    });
-});
+// app.delete("/api/yojana/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM tbl_yojana_type WHERE yojana_type_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting yojana:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "Yojana not found" });
+//             return;
+//         }
+//         res.json({ message: "Yojana deleted successfully" });
+//     });
+// });
 
 
 
 app.put("/api/yojana/:id", (req, res) => {
     const { id } = req.params;
-    const { yojana_type, status, description, link } = req.body;
+    const { category_id, subcategory_id, yojana_type, amount, status, description, link } = req.body;
+   
 
     const sql = `UPDATE tbl_yojana_type 
-                 SET yojana_type = ?,amount = ?,  status = ?, description = ?, link = ?, update_date_time = NOW() 
+                 SET category_id = ?, subcategory_id = ? , yojana_type = ?, amount = ?,  status = ?, description = ?, link = ?, update_date_time = NOW() 
                  WHERE yojana_type_id = ?`;
 
-    db.query(sql, [yojana_type, status, description, link, id], (err, result) => {
+    db.query(sql, [category_id, subcategory_id, yojana_type,amount, status, description, link, id], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
+            console.log(err);
             return;
         }
         res.json({ message: "Yojana updated successfully" });
     });
 });
 
+app.put("/api/yojana/deactive/:id", (req, res) => {
+    const { id } = req.params;
 
-//------------------------------------------Document-Yojana--------------------------------------------------
+    const sql = `UPDATE tbl_yojana_type 
+                 SET status = 'Deactive' , update_date_time = NOW() 
+                 WHERE yojana_type_id = ?`;
+
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ message: "Yojana Deactivated successfully" });
+    });
+});
+
+
+//------------------------------------------Yojana-Vice-Document--------------------------------------------------
 
 app.get('/api/document-yojana', (req,res) => {
     db.query("SELECT * FROM document_yojana", (err,result) => {
@@ -296,59 +339,81 @@ app.get('/api/document-yojana', (req,res) => {
 
 
 app.post("/api/new-document-yojana", (req, res) => {
-    const {category_id, subcategory_id, document_name, status} = req.body;
+    const { category_id, subcategory_id, yojana_id, documents, status } = req.body;
 
-    if (!category_id || !subcategory_id || !document_name || !status ) {
+    if (!category_id || !subcategory_id || !yojana_id || !Array.isArray(documents) || documents.length === 0 || !status) {
         console.error("Validation Error: Missing fields");
         return res.status(400).json({ error: "All fields are required!" });
     }
 
-    const sql = `INSERT INTO document_yojana (category_id,subcategory_id, document_name, status, ins_date_time, update_date_time) VALUES (?, ?, ?, ?, NOW(), NOW())`;
-    
+    const sql = `INSERT INTO document_yojana 
+    (category_id, subcategory_id, yojana_id, document_id, status, ins_date_time, update_date_time) 
+    VALUES ?`;
 
-    db.query(sql, [category_id, subcategory_id, document_name, status], (err, result) => {
+    const values = documents.map(doc_id => [category_id, subcategory_id, yojana_id, doc_id, status, new Date(), new Date()]);
+
+    db.query(sql, [values], (err, result) => {
         if (err) {
-            console.error("Database Insert Error:", err);  // Debugging
-            return result.status(500).json({ error: "Failed to add Document", details: err.message });
+            console.error("Database Insert Error:", err);
+            return res.status(500).json({ error: "Failed to add Document", details: err.message });
         }
-        res.json({ message: "Document added successfully", id: result.insertId });
+        res.json({ message: "Documents added successfully", affectedRows: result.affectedRows });
     });
 });
-
  
-app.delete("/api/document-yojana/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM document_yojana WHERE document_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting document:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Document not found" });
-            return;
-        }
-        res.json({ message: "Document deleted successfully" });
-    });
-});
+// app.delete("/api/document-yojana/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM document_yojana WHERE document_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting document:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "Document not found" });
+//             return;
+//         }
+//         res.json({ message: "Document deleted successfully" });
+//     });
+// });
 
 
 
 app.put("/api/document-yojana/:id", (req, res) => {
     const { id } = req.params;
-    const { category_id, subcategory_id, document_name, status } = req.body;
+    const { category_id, subcategory_id, documents, status } = req.body;
 
     const sql = `UPDATE document_yojana 
-                 SET category_id = ?, subcategory_id = ?, document_name = ?, status = ?, update_date_time = NOW() 
+                 SET category_id = ?, subcategory_id = ?, yojana_id = ?, document_id = ?, status = ?, update_date_time = NOW() 
                  WHERE document_id = ?`;
 
-    db.query(sql, [category_id, subcategory_id, document_name, status, id], (err, result) => {
+    const values = [category_id, subcategory_id, yojana_id, documents, status, id]; 
+
+
+    db.query(sql, [values], (err, result) => {
         if (err) {
             result.status(500).json({ error: err.message });
             return;
         }
         res.json({ message: "Document updated successfully" });
+    });
+});
+
+
+app.put("/api/document-yojana/deactive/:id", (req, res) => {
+    const { id } = req.params;
+
+    const sql = `UPDATE document_yojana 
+                 SET status = 'Deactive', update_date_time = NOW() 
+                 WHERE document_id = ?`;
+
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            result.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ message: "Document Deactivated successfully" });
     });
 });
 
@@ -388,39 +453,37 @@ app.post("/api/new-document", (req, res) => {
 });
 
  
-app.delete("/api/document/:id", (req, res) => {
+// app.delete("/api/document/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM document WHERE document_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting document:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "Document not found" });
+//             return;
+//         }
+//         res.json({ message: "Document deleted successfully" });
+//     });
+// });
+
+
+app.put("/api/document/deactive/:id", (req, res) => {
     const { id } = req.params;
-    const sql = `DELETE FROM document WHERE document_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting document:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Document not found" });
-            return;
-        }
-        res.json({ message: "Document deleted successfully" });
-    });
-});
-
-
-
-app.put("/api/document/:id", (req, res) => {
-    const { id } = req.params;
-    const { document_name, status } = req.body;
 
     const sql = `UPDATE document 
-                 SET  document_name = ?, status = ?, update_date_time = NOW() 
+                 SET  status = 'Deactive' , update_date_time = NOW() 
                  WHERE document_id = ?`;
 
-    db.query(sql, [document_name, status, id], (err, result) => {
+    db.query(sql, [id], (err, result) => {
         if (err) {
             result.status(500).json({ error: err.message });
             return;
         }
-        res.json({ message: "Document updated successfully" });
+        res.json({ message: "Document Deactivated successfully" });
     });
 });
 
@@ -463,24 +526,22 @@ app.post("/api/new-taluka", (req, res) => {
 });
 
 
-app.delete("/api/taluka/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM taluka WHERE taluka_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting yojana:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Yojana not found" });
-            return;
-        }
-        res.json({ message: "Taluka deleted successfully" });
-    });
-});
-
-
+// app.delete("/api/taluka/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM taluka WHERE taluka_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting yojana:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "Yojana not found" });
+//             return;
+//         }
+//         res.json({ message: "Taluka deleted successfully" });
+//     });
+// });
 
 app.put("/api/taluka/:id", (req, res) => {
     const { taluka_name_eng, taluka_name_marathi, pincode, status } = req.body;
@@ -499,6 +560,22 @@ app.put("/api/taluka/:id", (req, res) => {
     });
 });
 
+app.put("/api/taluka/deactive/:id", (req, res) => {
+    const { id } = req.params;
+
+    const sql = `UPDATE taluka 
+                 SET status = 'Deactive' , update_date_time = NOW()  
+                 WHERE taluka_id = ?`;
+
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ message: "Taluka Deactivated successfully" });
+    });
+});
+
 //--------------------------------------Panchayat-----------------------------------------------
 
 app.get('/api/panchayat', (req,res) => {
@@ -512,8 +589,6 @@ app.get('/api/panchayat', (req,res) => {
     });
 });
 
-
-
 app.get('/api/panchayat/:taluka_id', (req,res) => {
     const {taluka_id} = req.params;
     db.query(`SELECT * FROM gram_panchayat WHERE taluka_id = ?`,[taluka_id],  (err,result)=> {
@@ -524,7 +599,6 @@ app.get('/api/panchayat/:taluka_id', (req,res) => {
         res.json(result);
     });
 });
-
 
 app.post('/api/new-panchayat', (req,res)=> {
     const {panchayat_eng, panchayat_marathi, taluka_id, status} = req.body;
@@ -540,23 +614,22 @@ app.post('/api/new-panchayat', (req,res)=> {
     });
 });
 
-
-app.delete("/api/panchayat/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM gram_panchayat WHERE panchayat_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting yojana:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Panchayat not found" });
-            return;
-        }
-        res.json({ message: "Panchayat deleted successfully" });
-    });
-});
+// app.delete("/api/panchayat/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM gram_panchayat WHERE panchayat_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting yojana:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "Panchayat not found" });
+//             return;
+//         }
+//         res.json({ message: "Panchayat deleted successfully" });
+//     });
+// });
 
 
 app.put("/api/panchayat/:id", (req, res) => {
@@ -576,19 +649,49 @@ app.put("/api/panchayat/:id", (req, res) => {
     });
 });
 
+app.put("/api/panchayat/deactive/:id", (req, res) => {
+    const { id } = req.params;
+
+    const sql = `UPDATE gram_panchayat 
+                 SET status = 'Deactive' , update_date_time = NOW()  
+                 WHERE panchayat_id = ?`;
+
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            result.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ message: "Panchayat Deactivated successfully" });
+    });
+});
+
 //-----------------------------------------------Village------------------------------------------------------
 
+app.get('/api/village/:taluka_id?/:panchayat_id?', (req, res) => {
+    let { taluka_id, panchayat_id } = req.params;
+    let query = `SELECT * FROM village_tbl WHERE 1=1`; // Always true to simplify conditions
+    let values = [];
 
-app.get('/api/village/:taluka_id/:panchayat_id', (req,res) => {
-    const {taluka_id, panchayat_id} = req.params;
-    db.query(`SELECT * FROM village_tbl WHERE taluka_id = ? AND panchayat_id = ?`,[taluka_id, panchayat_id],  (err,result)=> {
-        if(err){
-            console.log("Error :" , err);
-            return res.status(500).json({error:"Database error"});
+    if (taluka_id && taluka_id !== "All") {
+        query += ` AND taluka_id = ?`;
+        values.push(taluka_id);
+    }
+
+    if (panchayat_id && panchayat_id !== "All") {
+        query += ` AND panchayat_id = ?`;
+        values.push(panchayat_id);
+    }
+
+    db.query(query, values, (err, result) => {
+        if (err) {
+            console.log("Error:", err);
+            return res.status(500).json({ error: "Database error" });
         }
         res.json(result);
     });
 });
+
+
 
 
 app.post('/api/new-village', (req,res)=> {
@@ -606,22 +709,22 @@ app.post('/api/new-village', (req,res)=> {
 });
 
 
-  app.delete("/api/village/:id", (req, res) => {
-    const { id } = req.params;
-    const sql = `DELETE FROM village_tbl WHERE village_id = ?`;
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting village:", err);
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (result.affectedRows === 0) {
-            res.status(404).json({ message: "Village not found" });
-            return;
-        }
-        res.json({ message: "Village deleted successfully" });
-    });
-});
+//   app.delete("/api/village/:id", (req, res) => {
+//     const { id } = req.params;
+//     const sql = `DELETE FROM village_tbl WHERE village_id = ?`;
+//     db.query(sql, [id], (err, result) => {
+//         if (err) {
+//             console.error("Error deleting village:", err);
+//             res.status(500).json({ error: err.message });
+//             return;
+//         }
+//         if (result.affectedRows === 0) {
+//             res.status(404).json({ message: "Village not found" });
+//             return;
+//         }
+//         res.json({ message: "Village deleted successfully" });
+//     });
+// });
 
 
 app.put("/api/village/:id", (req, res) => {
@@ -641,6 +744,25 @@ app.put("/api/village/:id", (req, res) => {
                     res.json({ message: "Village updated successfully" });
                 });
     });
+
+
+app.put("/api/village/deactive/:id", (req, res) => {
+        const { id } = req.params;
+
+    
+        const sql = `UPDATE village_tbl 
+                     SET status = 'Deactive' ,update_date_time = NOW()  
+                     WHERE village_id = ?`;
+    
+       
+                     db.query(sql, [id], (err, result) => {
+                        if (err) {
+                            res.status(500).json({ error: err.message });
+                            return;
+                        }
+                        res.json({ message: "Village Deactivated successfully" });
+                    });
+        });
 
 
 

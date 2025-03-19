@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 
 import  axios from 'axios';
@@ -141,25 +141,29 @@ const GramPanchayat = () => {
     };
 
     // Handle Delete
-    const deletepanchayat = async (id) => {
-        console.log("Deleting panchayat with id:", id);
-        if (!window.confirm("Are you sure you want to delete this Panchayat?")) 
-            return;
+    const deactivatePanchayat = async (id) => {
+        console.log("Deactivating panchayat with id:", id);
+       
         try {
-            const response = await fetch(`${URL}/api/panchayat/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/panchayat/deactive/${id}`, {
+             method: "PUT",
+             headers :{"Content-Type":"application/json"},
             });
 
             if (!response.ok){
-                 throw new Error("Failed to delete");
+                 throw new Error("Failed to Deactive");
             }
 
-            setPanchayatData((prevData) => prevData.filter((panchayat) => panchayat.id !== id));
-
-            console.log("Panchayat deleted successfully!");
+            setPanchayatData((prevData) => 
+                prevData.map((panchayat) =>
+                    panchayat.panchayat_id === id ? { ...panchayat, status: "Deactive" } : panchayat
+                )
+            );
+    
+            console.log("Panchayat deactivated successfully!");
             await fetchpanchayat(selectedTaluka);
         } catch (error) {
-            console.error("Error deleting panchayat:", error);
+            console.error("Error Deactivating panchayat:", error);
         }
     };
 
@@ -257,8 +261,8 @@ const GramPanchayat = () => {
                                                     <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(panchayat)}>
                                                         <PencilLine size={20} />
                                                     </button>
-                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deletepanchayat(panchayat.panchayat_id)}>
-                                                        <Trash size={20} />
+                                                    <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded  dark:text-white" onClick={() => deactivatePanchayat(panchayat.panchayat_id)}>
+                                                        <ShieldOff size={20} />
                                                     </button>
                                                 </div>
                                             </td>

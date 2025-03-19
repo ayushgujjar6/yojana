@@ -13,7 +13,7 @@ const dbConfigLocal = {
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'governmentscheme'
+    database: 'yojana'
 };
 
 let db = mysql.createConnection(dbConfigLocal);

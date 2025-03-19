@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 
 const Yojana = () => {
@@ -98,7 +98,7 @@ const Yojana = () => {
 
         const newYojana = {
             category_id: categoryIDRef.current.value,
-            sub_category_id: subCategoryIDRef.current.value,
+            subcategory_id: subCategoryIDRef.current.value,
             yojana_type: nameInputRef.current.value,
             amount : amountRef.current.value,
             status: statusInputRef.current.value,
@@ -108,9 +108,9 @@ const Yojana = () => {
 
         try {
             const response = await fetch(
-                formData?.id ? `${URL}/api/yojana/${formData.id}` : `${URL}/api/new-yojana`,
+                formData?.yojana_type_id ? `${URL}/api/yojana/${formData.yojana_type_id}` : `${URL}/api/new-yojana`,
                 {
-                    method: formData?.id ? "PUT" : "POST",
+                    method: formData?.yojana_type_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newYojana),
                 }
@@ -120,7 +120,7 @@ const Yojana = () => {
 
             await fetchYojana(); // Refresh the list after adding/updating
             handleCloseForm();
-            console.log(formData?.id ? "Yojana updated successfully" : "New Yojana added successfully");
+            console.log(formData?.yojana_type_id ? "Yojana updated successfully" : "New Yojana added successfully");
         } catch (error) {
             console.error("Error saving yojana:", error);
         }
@@ -133,25 +133,28 @@ const Yojana = () => {
     };
 
     // Handle Delete
-    const deleteYojana = async (id) => {
-        console.log("Deleting yojana with id:", id);
-        if (!window.confirm("Are you sure you want to delete this Yojana?")) 
-            return;
+    const deactiveYojana = async (id) => {
+        console.log("Deactivating yojana with id:", id);
         try {
-            const response = await fetch(`${URL}/api/yojana/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/yojana/deactive/${id}`, {
+             method: "PUT",
+             headers: { "Content-Type": "application/json" },
             });
 
             if (!response.ok){
                  throw new Error("Failed to delete");
             }
 
-            setYojanaData((prevData) => prevData.filter((yojana) => yojana.id !== id));
-
-            console.log("Yojana deleted successfully!");
+            setYojanaData((prevData) => 
+                prevData.map((yojana) =>
+                    yojana.yojana_type_id === id ? { ...yojana, status: "Deactive" } : yojana
+                )
+            );
+    
+            console.log("Yojana deactivated successfully!");
             await fetchYojana();
         } catch (error) {
-            console.error("Error deleting yojana:", error);
+            console.error("Error deactivating yojana:", error);
         }
     };
 
@@ -257,8 +260,8 @@ const Yojana = () => {
                                                         <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(yojana)}>
                                                             <PencilLine size={20} />
                                                         </button>
-                                                        <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deleteYojana(yojana.yojana_type_id)}>
-                                                            <Trash size={20} />
+                                                        <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactiveYojana(yojana.yojana_type_id)}>
+                                                            <ShieldOff  size={20} />
                                                         </button>
                                                 </div>
                                             </td>

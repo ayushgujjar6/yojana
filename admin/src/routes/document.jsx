@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import toast from "react-hot-toast";
 
@@ -94,26 +94,31 @@ const Document = () => {
     };
 
     // Handle Delete
-    const deleteDocument = async (id) => {
-        console.log("Deleting document with id:", id);
-        if (!window.confirm("Are you sure you want to delete this Sub document?")) 
-            return;
+    const deactiveDocument = async (id) => {
+        console.log("Deactivating document with id:", id);
+       
         try {
-            const response = await fetch(`${URL}/api/document/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/document/deactive/${id}`, {
+             method: "PUT",
+             headers: {"Content-Type" : "application/json" },
             });
 
             if (!response.ok){
                  throw new Error("Failed to delete");
             }
 
-            setDocumentData((prevData) => prevData.filter((document) => document.id !== id));
+            setDocumentData((prevData) => 
+                prevData.map((document) =>
+                    document.document_id === id ? { ...document, status: "Deactive" } : document
+                )
+            );
+    
 
-            toast.success("document deleted!");
+            toast.success("Document Deactivated!");
             await fetchDocument();
         } catch (error) {
-            console.error("Error deleting document:", error);
-            toast.error("Failed to Delete");
+            console.error("Error Deactivating document:", error);
+            toast.error("Failed to Deactive");
         }
     };
 
@@ -201,8 +206,8 @@ const Document = () => {
                                                             <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(document)}>
                                                                 <PencilLine size={20} />
                                                             </button>
-                                                            <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deleteDocument(document.document_id)}>
-                                                                <Trash size={20} />
+                                                            <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactiveDocument(document.document_id)}>
+                                                                <ShieldOff size={20} />
                                                             </button>
                                                     </div>
                                                 </td>

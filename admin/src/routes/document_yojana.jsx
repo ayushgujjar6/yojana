@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import toast from "react-hot-toast";
 
@@ -16,7 +16,10 @@ const Document_Yojana = () => {
     const [categoryData, setCategoryData] = useState([]);
     const [subCategoryData, setSubCategoryData] = useState([]);
     const [yojanaData, setYojanaData] = useState([]);
-
+    const [selectedCategory, setSelectedCategory] = useState([]);
+    const [selectedSubCategory, setSelectedSubCategory] = useState([]);
+    const [selectedDocuments, setSelectedDocuments] = useState([]);
+    
 
     
     const  URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
@@ -74,6 +77,20 @@ const Document_Yojana = () => {
         fetchYojana(); // Load data on component mount
     }, []);
 
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            try {
+                const response = await fetch(`${URL}/api/document`);
+                const data = await response.json();
+                setDocumentData(data);
+            } catch (error) {
+                console.error("Error fetching documents:", error);
+            }
+        };
+    
+        fetchDocuments();
+    }, []);
+
 
 
     const fetchDocument = async () => {
@@ -106,21 +123,28 @@ const Document_Yojana = () => {
     // Handle form submission (Add/Edit Yojana)
     const submitFormHandler = async (e) => {
         e.preventDefault();
+        
 
+      
+      
+
+        if (selectedDocuments.length === 0) {
+            toast.error("Please select at least one document.");
+            return;
+        }
         const newDocument = {
-            category_id : categoryIDRef.current.values,
-            subcategory_id : subcategoryIDRef.current.values,
-            yojana_id : yojanaIDRef.current.values,
-            document_id : documentIDRef.current.value,
-            document_name : documentRef.current.value ,
+            category_id : Number(selectedCategory),
+            subcategory_id :Number(selectedSubCategory),
+            yojana_id :Number(e.target.yojana_id.value),
+            documents : selectedDocuments ,
             status: statusInputRef.current.value,
         };
 
         try {
             const response = await fetch(
-                formData?.id ? `${URL}/api/document-yojana/${formData.id}` : `${URL}/api/new-document-yojana`,
+                formData?.document_id ? `${URL}/api/document-yojana/${formData?.document_id}` : `${URL}/api/new-document-yojana`,
                 {
-                    method: formData?.id ? "PUT" : "POST",
+                    method: formData?.document_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newDocument),
                 }
@@ -130,7 +154,7 @@ const Document_Yojana = () => {
 
             await fetchDocument(); // Refresh the list after adding/updating
             handleCloseForm();
-            toast.success(formData?.id ? "document updated!" : "New document added!");
+            toast.success(formData?.document_id ? "document updated!" : "New document added!");
         } catch (error) {
             console.error("Error saving document:", error);
         }
@@ -143,28 +167,41 @@ const Document_Yojana = () => {
     };
 
     // Handle Delete
-    const deleteDocument = async (id) => {
-        console.log("Deleting document with id:", id);
-        if (!window.confirm("Are you sure you want to delete this Sub document?")) 
-            return;
+    const deactiveDocument = async (id) => {
+        console.log("Deactivating document with id:", id);
         try {
-            const response = await fetch(`${URL}/api/document-yojana/${id}`, {
-             method: "DELETE",
+            const response = await fetch(`${URL}/api/document-yojana/deactive/${id}`, {
+             method: "PUT",
+             headers: { "Content-Type": "application/json" },
             });
 
             if (!response.ok){
                  throw new Error("Failed to delete");
             }
+            setDocumentData((prevData) => 
+                prevData.map((document) =>
+                    document.document_id === id ? { ...document, status: "Deactive" } : document
+                )
+            );
+    
 
-            setDocumentData((prevData) => prevData.filter((document) => document.id !== id));
-
-            toast.success("document deleted!");
+            toast.success("Document Deactive!");
             await fetchDocument();
         } catch (error) {
-            console.error("Error deleting document:", error);
-            toast.error("Failed to Delete");
+            console.error("Error Deactive document:", error);
+            toast.error("Failed to Deactive");
         }
     };
+
+
+    const handleCheckboxChange = (documentId) => {
+        setSelectedDocuments((prevSelected) =>
+            prevSelected.includes(documentId)
+                ? prevSelected.filter((id) => id !== documentId) // Remove if already selected
+                : [...prevSelected, documentId] // Add if not selected
+        );
+    };
+    
 
     const handleStatusChange = (e) => {
          setSelectedStatus(e.target.value);
@@ -229,6 +266,7 @@ const Document_Yojana = () => {
                                     <th className="table-head">Sub Category</th>
                                     <th className="table-head">Yojana</th>
                                     <th className="table-head">Document</th>
+                                    <th className="table-head">Status</th>
                                     <th className="table-head">Actions</th>
                                 </tr>
                             </thead>
@@ -238,26 +276,28 @@ const Document_Yojana = () => {
                                         const category = categoryData.find(cat => cat.category_id == document.category_id);
                                         const sub_category = subCategoryData.find(cat => cat.subcategory_id == document.subcategory_id);
                                         const yojana = yojanaData.find(cat => cat.yojana_type_id == document.yojana_id);
+                                        
+
                                         return (
                                             <tr key={document.id} className="table-row">
                                                 <td className="table-cell">{indexOfFirstItem + index + 1}</td>
                                                 <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
                                                 <td className="table-cell">{sub_category ? sub_category.subcategory_name : 'N/A'}</td>
                                                 <td className="table-cell">{yojana ? yojana.yojana_type : 'N/A'}</td>
-                                                <td className="table-cell">{document.document_name}</td>
-                                                {/* <td className="table-cell">
+                                                <td className="table-cell">{document?.document_id || "N/A"}</td>
+                                                <td className="table-cell">
                                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                         ${document.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
                                                         {document.status}
                                                     </span>
-                                                </td> */}
+                                                </td>
                                                 <td className="table-cell">
                                                         <div className="flex items-center gap-x-4">
                                                             <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(document)}>
                                                                 <PencilLine size={20} />
                                                             </button>
-                                                            <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deleteDocument(document.document_id)}>
-                                                                <Trash size={20} />
+                                                            <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactiveDocument(document.document_id)}>
+                                                                <ShieldOff size={20} />
                                                             </button>
                                                     </div>
                                                 </td>
@@ -288,29 +328,79 @@ const Document_Yojana = () => {
                             <SquareX className="mb-3" />
                         </button>
                         <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
-                            <select ref={categoryIDRef} type="text" placeholder="Select Category" required className="w-full p-2 border rounded-md" defaultValue={formData?.category_name || ""} >
-                                {categoryData.map(category => (
-                                    <option key={category.category_id} value={category.category_id}>{category.category_name}</option>
-                                ))}
-                            </select>
-                            <select ref={subcategoryIDRef} type="text" placeholder="Select Sub Category" required className="w-full p-2 border rounded-md" defaultValue={formData?.subcategory_name || ""} >
-                                {subCategoryData.map(subcategory => (
-                                    <option key={subcategory.subcategory_id} value={subcategory.subcategory_id}>{subcategory.subcategory_name}</option>
-                                ))}
-                            </select>
-                            <select ref={yojanaIDRef} type="text" placeholder="Select Yojana" required className="w-full p-2 border rounded-md" defaultValue={formData?.yojana_type || ""} >
-                                {yojanaData.map(yojana => (
-                                    <option key={yojana.yojana_type_id} value={yojana.yojana_type_id}>{yojana.yojana_type}</option>
-                                ))}
-                            </select>
-                            <input ref={documentRef} type="text" placeholder="New document Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.document_name || ""} />
-                            <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
-                                <option value="Active">Active</option>
-                                <option value="Deactive">Deactive</option>
-                            </select>
-                            <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md">
-                                {formData ? "Update document" : "Add document"}
-                            </button>
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    required
+                                    className="w-full p-2 border rounded-md">
+
+                                    <option value="">Select Category</option>
+                                    {categoryData.map((category) => (
+                                        <option key={category.category_id} value={category.category_id}>
+                                            {category.category_name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    value={selectedSubCategory}
+                                    onChange={(e) => setSelectedSubCategory(e.target.value)}
+                                    required
+                                    className="w-full p-2 border rounded-md">
+
+                                <option value="">Select Sub Category</option>
+                                {subCategoryData
+                                    .filter((subcategory) => subcategory.category_id == selectedCategory) // Filter based on category
+                                    .map((subcategory) => (
+                                        <option key={subcategory.subcategory_id} value={subcategory.subcategory_id}>
+                                            {subcategory.subcategory_name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <select name="yojana_id" required className="w-full p-2 border rounded-md">
+                                     <option value="">Select Yojana</option>
+                                    {yojanaData
+                                        .filter((yojana) => yojana.subcategory_id == selectedSubCategory) // Filter based on subcategory
+                                        .map((yojana) => (
+                                            <option key={yojana.yojana_type_id} value={yojana.yojana_type_id}>
+                                                {yojana.yojana_type}
+                                            </option>
+                                        ))}
+                                </select>
+
+                                {documentData.length > 0 ? (
+                                    <div>
+                                        {documentData.map((document) => (
+                                            <div key={document.document_id} className="flex items-center space-x-2 text-black">
+                                                <input
+                                                    ref={documentIDRef}
+                                                    type="checkbox"
+                                                    id={`document-${document.document_id}`}
+                                                    value={document.document_id}
+                                                    checked={selectedDocuments.includes(document.document_id)}
+                                                    onChange={() => handleCheckboxChange(document.document_id)}
+                                                    className="p-2 border rounded-md"
+                                                />
+                                                <label htmlFor={`document-${document.document_id}`}>{document.document_id}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p>No documents available</p>
+                                )}
+
+
+
+                                
+
+                                <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
+                                    <option value="Active">Active</option>
+                                    <option value="Deactive">Deactive</option>
+                                </select>
+                                <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md">
+                                    {formData ? "Update document" : "Add document"}
+                                </button>
                         </form>
                     </div>
                 </div>

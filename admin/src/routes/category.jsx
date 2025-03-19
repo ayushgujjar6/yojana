@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Footer } from "@/layouts/footer";
-import { PencilLine, Plus, SquareX, Trash } from "lucide-react";
+import { PencilLine, Plus, ShieldOff, SquareX, Trash } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import toast from "react-hot-toast";
 
@@ -95,27 +95,31 @@ const Category = () => {
     };
 
     // Handle Delete
-    const deleteCategory = async (id) => {
-        console.log("Deleting Category with id:", id);
-        if (!window.confirm("Are you sure you want to delete this Caategory?")) 
+    const deactiveCategory = async (id) => {
+        console.log("Category with id:", id);
+        if (!window.confirm("Are you sure you want to Deactivating this Category?")) 
             return;
         try {
-            const response = await fetch(`${URL}/api/category/${id}`, {
-                method: "DELETE",
+            const response = await fetch(`${URL}/api/category/deactive/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
             });
-
-            if (!response.ok){
-                 throw new Error("Failed to delete");
-            }
-
-            setCategoryData((prevData) => prevData.filter((category) => category.id !== id));
-
-            console.log("Category deleted successfully!");
-            toast.success("Category deleted successfully");
+    
+            if (!response.ok) throw new Error("Failed to deactivate");
+    
+            setCategoryData((prevData) => 
+                prevData.map((category) =>
+                    category.category_id === id ? { ...category, status: "Deactive" } : category
+                )
+            );
+    
+            console.log("Category deactivated successfully!");
+            toast.success("Category deactivated successfully");
             await fetchCategory();
+
         } catch (error) {
-            console.error("Error deleting Category:", error);
-            toast.error("Error deleting category");
+            console.error("Error deactivating Category:", error);
+            toast.error("Error deactivating category");
         }
     };
 
@@ -200,8 +204,8 @@ const Category = () => {
                                                         <button className="flex justify-center items-center text-xs text-white bg-blue-500 w-[50px] h-full rounded dark:text-white" onClick={() => handleEditForm(category)}>
                                                             <PencilLine size={20} />
                                                         </button>
-                                                        <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deleteCategory(category.category_id)}>
-                                                            <Trash size={20} />
+                                                        <button className="flex justify-center items-center text-xs text-white bg-red-500 w-[50px] h-full rounded dark:text-white" onClick={() => deactiveCategory(category.category_id)}>
+                                                            <ShieldOff  size={20} />
                                                         </button>
                                                 </div>
                                             </td>
