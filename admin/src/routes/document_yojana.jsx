@@ -19,6 +19,7 @@ const Document_Yojana = () => {
     const [selectedCategory, setSelectedCategory] = useState([]);
     const [selectedSubCategory, setSelectedSubCategory] = useState([]);
     const [selectedDocuments, setSelectedDocuments] = useState([]);
+    const [documentListData, setDocumentListData] = useState([]);
     
 
     
@@ -80,9 +81,9 @@ const Document_Yojana = () => {
     useEffect(() => {
         const fetchDocuments = async () => {
             try {
-                const response = await fetch(`${URL}/api/document`);
+                const response = await fetch(`${URL}/api/active-document`);
                 const data = await response.json();
-                setDocumentData(data);
+                setDocumentListData(data);
             } catch (error) {
                 console.error("Error fetching documents:", error);
             }
@@ -142,7 +143,7 @@ const Document_Yojana = () => {
 
         try {
             const response = await fetch(
-                formData?.document_id ? `${URL}/api/document-yojana/${formData?.document_id}` : `${URL}/api/new-document-yojana`,
+                 formData?.id ? `${URL}/api/document-yojana/${formData?.id}` : `${URL}/api/new-document-yojana`,
                 {
                     method: formData?.document_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -163,8 +164,10 @@ const Document_Yojana = () => {
     //  Handle Editing
     const handleEditForm = (document) => {
         setFormData(document);
+        setSelectedDocuments(document.documents ? document.documents.split(', ') : []);
         setShowForm(true);
     };
+    
 
     // Handle Delete
     const deactiveDocument = async (id) => {
@@ -276,6 +279,7 @@ const Document_Yojana = () => {
                                         const category = categoryData.find(cat => cat.category_id == document.category_id);
                                         const sub_category = subCategoryData.find(cat => cat.subcategory_id == document.subcategory_id);
                                         const yojana = yojanaData.find(cat => cat.yojana_type_id == document.yojana_id);
+                                        const doc = documentListData.find(cat => cat.document_id == document.document_id);
                                         
 
                                         return (
@@ -284,7 +288,7 @@ const Document_Yojana = () => {
                                                 <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
                                                 <td className="table-cell">{sub_category ? sub_category.subcategory_name : 'N/A'}</td>
                                                 <td className="table-cell">{yojana ? yojana.yojana_type : 'N/A'}</td>
-                                                <td className="table-cell">{document?.document_id || "N/A"}</td>
+                                                <td className="table-cell">{doc ? doc.document_name : "N/A"}</td>
                                                 <td className="table-cell">
                                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                         ${document.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
@@ -371,7 +375,7 @@ const Document_Yojana = () => {
 
                                 {documentData.length > 0 ? (
                                     <div>
-                                        {documentData.map((document) => (
+                                        {documentListData.map((document) => (
                                             <div key={document.document_id} className="flex items-center space-x-2 text-black">
                                                 <input
                                                     ref={documentIDRef}
@@ -382,7 +386,7 @@ const Document_Yojana = () => {
                                                     onChange={() => handleCheckboxChange(document.document_id)}
                                                     className="p-2 border rounded-md"
                                                 />
-                                                <label htmlFor={`document-${document.document_id}`}>{document.document_id}</label>
+                                                <label htmlFor={`document-${document.document_id}`}>{document.document_name}</label>
                                             </div>
                                         ))}
                                     </div>

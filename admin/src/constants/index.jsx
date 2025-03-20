@@ -73,16 +73,6 @@ export const navbarLinks = [
                 icon: Users,
                 path: "/user",
             },
-            {
-                label: "New User",
-                icon: UserPlus,
-                path: "/user",
-            },
-            {
-                label: "Verified User",
-                icon: UserCheck,
-                path: "/user",
-            },
         ],
     },
     
@@ -92,7 +82,17 @@ export const navbarLinks = [
             {
                 label: "Settings",
                 icon: Settings,
-                path: "/user",
+                path: "/setting",
+            },
+            {
+                label: "Login",
+                icon: Settings,
+                path: "/login",
+            },
+            {
+                label: "Register",
+                icon: Settings,
+                path: "/register",
             },
         ],
     },

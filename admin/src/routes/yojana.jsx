@@ -29,6 +29,7 @@ const Yojana = () => {
     const linkInputRef = useRef();
     const detailsInputRef = useRef();
     const statusInputRef = useRef();
+    const yojanaYearRef = useRef();
 
     // Fetch Yojana data from the backend
     const fetchYojana = async () => {
@@ -101,6 +102,7 @@ const Yojana = () => {
             subcategory_id: subCategoryIDRef.current.value,
             yojana_type: nameInputRef.current.value,
             amount : amountRef.current.value,
+            year : yojanaYearRef.current.value,
             status: statusInputRef.current.value,
             description: detailsInputRef.current.value,
             link: linkInputRef.current.value,
@@ -232,6 +234,7 @@ const Yojana = () => {
                                     <th className="table-head">Sub Category</th>
                                     <th className="table-head">Yojana</th>
                                     <th className="table-head">Amount</th>
+                                    <th className="table-head">Year</th>
                                     <th className="table-head">Status</th>
                                     <th className="table-head">Actions</th>
                                 </tr>
@@ -249,6 +252,7 @@ const Yojana = () => {
                                             <td className="table-cell">{sub_category ? sub_category.subcategory_name : 'N/A'}</td>
                                             <td className="table-cell">{yojana.yojana_type}</td>
                                             <td className="table-cell">{yojana.amount}</td>
+                                            <td className="table-cell">{yojana.yojana_year}</td>
                                             <td className="table-cell">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                     ${yojana.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
@@ -324,8 +328,28 @@ const Yojana = () => {
                                         <option disabled>No subcategories available</option>
                                     )}
                             </select>
+
+                            
+
                             <input ref={nameInputRef} type="text" placeholder="New Yojana Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.yojana_type || ""} />
                             <input ref={amountRef} type="number" placeholder="Amount" required className="w-full p-2 border rounded-md" defaultValue={formData?.amount || ""} />
+                                    
+                            <select 
+                                ref={yojanaYearRef} 
+                                required 
+                                className="w-full p-2 border rounded-md"
+                            >
+                                <option value="">Select Year</option>
+                                {Array.from({ length: 10 }, (_, i) => {
+                                    const year = new Date().getFullYear() - i;
+                                    return (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+
                             <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
                                 <option value="Active">Active</option>
                                 <option value="Deactive">Deactive</option>

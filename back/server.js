@@ -8,7 +8,8 @@ const db = require('./DB/db');
 
 require('dotenv').config();
 
-const PORT  = 5555;
+const PORT  = process.env.DB_PORT ||  3306;
+const SECRET_KEY = process.env.SECRET_KEY;
 
 
 const app =express();
@@ -38,7 +39,7 @@ app.post('/api/login', (req,res) => {
 
         const token = jwt.sign({id: user.id}, SECRET_KEY ,{expiresIn: '1h'});
 
-        db.query('UPDATE user SET status = "yes", time = NOW() WHERE id = ?', [user.id]);
+        db.query('UPDATE user SET status = "Active", time = NOW() WHERE id = ?', [user.id]);
         res.json({message: 'Login Successfully', token});
 
     });
@@ -54,7 +55,7 @@ app.post('/api/register', async(req,res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     db.query('INSERT INTO user (name, email, password, mobileno, status, time) VALUES (?,?,?,?,?, NOW())', 
-        [name, email, hashedPassword, mobileno, "yes"],
+        [name, email, hashedPassword, mobileno, "Active"],
         (err, results) => {
             if(err){
                 console.log(err);
@@ -74,6 +75,26 @@ app.get('/api/total-yojana', (req, res) => {
     });
   });
 
+app.get('/api/total-user', (req, res) => {
+    db.query("SELECT COUNT(*) AS total FROM user", (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ totalUser: result[0].total });
+    });
+  });
+
+app.get('/api/total-category', (req, res) => {
+    db.query("SELECT COUNT(*) AS total FROM category_yojana", (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ totalCategory: result[0].total });
+    });
+  });
+
+  app.get('/api/total-taluka', (req, res) => {
+    db.query("SELECT COUNT(*) AS total FROM taluka", (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ totalTaluka: result[0].total });
+    });
+  });
 
   //--------------------------------Category--------------------------------------------------------
 
@@ -178,23 +199,6 @@ app.post('/api/new-subcategory', (req,res)=> {
 });
 
 
-// app.delete("/api/subcategory/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM sub_category WHERE subcategory_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting subcategory:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "subcategory not found" });
-//             return;
-//         }
-//         res.json({ message: "Subcategory deleted successfully" });
-//     });
-// });
-
 
 app.put("/api/subcategory/:id", (req, res) => {
     const { subcategory_name, category_id, status } = req.body;
@@ -250,17 +254,17 @@ app.get('/api/yojana', (req,res) => {
 
 
 app.post("/api/new-yojana", (req, res) => {
-    const {category_id, subcategory_id, yojana_type, amount, status, description, link } = req.body;
+    const {category_id, subcategory_id, yojana_type, amount, year, status, description, link } = req.body;
 
-    if (!category_id || !subcategory_id || !yojana_type || !amount || !status || !description || !link) {
+    if (!category_id || !subcategory_id || !yojana_type || !amount || !year || !status || !description || !link) {
         console.error("Validation Error: Missing fields");
         return res.status(400).json({ error: "All fields are required!" });
     }
 
-    const sql = `INSERT INTO tbl_yojana_type (category_id, subcategory_id, yojana_type, amount, status, description, link, ins_date_time, update_date_time) VALUES (?, ?,?,?, ?, ?, ?, NOW(), NOW())`;
+    const sql = `INSERT INTO tbl_yojana_type (category_id, subcategory_id, yojana_type, amount, yojana_year, status, description, link, ins_date_time, update_date_time) VALUES (?, ?,?,?, ?, ?, ?, NOW(), NOW())`;
     
 
-    db.query(sql, [category_id, subcategory_id, yojana_type, amount, status, description, link], (err, result) => {
+    db.query(sql, [category_id, subcategory_id, yojana_type, amount, year, status, description, link], (err, result) => {
         if (err) {
             console.error("Database Insert Error:", err);  // Debugging
             return res.status(500).json({ error: "Failed to add yojana", details: err.message });
@@ -291,14 +295,14 @@ app.post("/api/new-yojana", (req, res) => {
 
 app.put("/api/yojana/:id", (req, res) => {
     const { id } = req.params;
-    const { category_id, subcategory_id, yojana_type, amount, status, description, link } = req.body;
+    const { category_id, subcategory_id, yojana_type, amount, year, status, description, link } = req.body;
    
 
     const sql = `UPDATE tbl_yojana_type 
-                 SET category_id = ?, subcategory_id = ? , yojana_type = ?, amount = ?,  status = ?, description = ?, link = ?, update_date_time = NOW() 
+                 SET category_id = ?, subcategory_id = ? , yojana_type = ?, amount = ?, yojana_year = ?,   status = ?, description = ?, link = ?, update_date_time = NOW() 
                  WHERE yojana_type_id = ?`;
 
-    db.query(sql, [category_id, subcategory_id, yojana_type,amount, status, description, link, id], (err, result) => {
+    db.query(sql, [category_id, subcategory_id, yojana_type, amount, year, status, description, link, id], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             console.log(err);
@@ -337,6 +341,38 @@ app.get('/api/document-yojana', (req,res) => {
     });
 });
 
+app.get("/api/yojana-list-document", (req, res) => {
+    const sql = `
+        SELECT 
+            dy.id AS yojana_id,
+            dy.yojana_name,
+            GROUP_CONCAT(d.document_name SEPARATOR ', ') AS documents
+        FROM document_yojana dy
+        LEFT JOIN yojana_list_document yld ON dy.id = yld.yojana_id
+        LEFT JOIN document d ON yld.document_id = d.document_id
+        GROUP BY dy.id, dy.yojana_name
+    `;
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error("Error fetching data:", err);
+            return res.status(500).json({ error: "Database Error" });
+        }
+        res.json(result);
+    });
+});
+
+
+app.get('/api/active-document', (req,res) => {
+    db.query("SELECT * FROM document WHERE status = 'Active'", (err,result) => {
+        if(err){
+            console.log("Error: ", err);
+            return res.status(500).json({error:"Database Error"});
+        }
+        res.json(result);
+    });
+});
+
 
 app.post("/api/new-document-yojana", (req, res) => {
     const { category_id, subcategory_id, yojana_id, documents, status } = req.body;
@@ -346,20 +382,36 @@ app.post("/api/new-document-yojana", (req, res) => {
         return res.status(400).json({ error: "All fields are required!" });
     }
 
-    const sql = `INSERT INTO document_yojana 
-    (category_id, subcategory_id, yojana_id, document_id, status, ins_date_time, update_date_time) 
-    VALUES ?`;
+    console.log(req.body);
 
-    const values = documents.map(doc_id => [category_id, subcategory_id, yojana_id, doc_id, status, new Date(), new Date()]);
+    // Insert into document_yojana (Main Table)
+    const sql1 = `INSERT INTO document_yojana 
+        (category_id, subcategory_id, yojana_id, status, ins_date_time, update_date_time) 
+        VALUES (?, ?, ?, ?, NOW(), NOW())`;
 
-    db.query(sql, [values], (err, result) => {
+    db.query(sql1, [category_id, subcategory_id, yojana_id, status], (err, result) => {
         if (err) {
             console.error("Database Insert Error:", err);
-            return res.status(500).json({ error: "Failed to add Document", details: err.message });
+            return res.status(500).json({ error: "Failed to add Yojana", details: err.message });
         }
-        res.json({ message: "Documents added successfully", affectedRows: result.affectedRows });
+
+        const yojanaId = result.insertId; // Get the inserted Yojana ID
+
+        // Insert into Mapping Table (yojana_list_document)
+        const sql2 = `INSERT INTO yojana_list_document (yojana_id, document_id) VALUES ?`;
+
+        const values = documents.map(doc_id => [yojanaId, doc_id]);
+
+        db.query(sql2, [values], (err, result) => {
+            if (err) {
+                console.error("Database Insert Error:", err);
+                return res.status(500).json({ error: "Failed to map Documents", details: err.message });
+            }
+            res.json({ message: "Yojana and Documents added successfully", affectedRows: result.affectedRows });
+        });
     });
 });
+
  
 // app.delete("/api/document-yojana/:id", (req, res) => {
 //     const { id } = req.params;
@@ -382,23 +434,49 @@ app.post("/api/new-document-yojana", (req, res) => {
 
 app.put("/api/document-yojana/:id", (req, res) => {
     const { id } = req.params;
-    const { category_id, subcategory_id, documents, status } = req.body;
+    const { category_id, subcategory_id, yojana_id, documents, status } = req.body;
 
-    const sql = `UPDATE document_yojana 
-                 SET category_id = ?, subcategory_id = ?, yojana_id = ?, document_id = ?, status = ?, update_date_time = NOW() 
-                 WHERE document_id = ?`;
+    if (!category_id || !subcategory_id || !yojana_id || !Array.isArray(documents) || documents.length === 0 || !status) {
+        console.error("Validation Error: Missing fields");
+        return res.status(400).json({ error: "All fields are required!" });
+    }
 
-    const values = [category_id, subcategory_id, yojana_id, documents, status, id]; 
+    // Step 1: Update Main Table (document_yojana)
+    const sql1 = `UPDATE document_yojana 
+        SET category_id = ?, subcategory_id = ?, yojana_id = ?, status = ?, update_date_time = NOW() 
+        WHERE ID = ?`;
 
-
-    db.query(sql, [values], (err, result) => {
+    db.query(sql1, [category_id, subcategory_id, yojana_id, status, id], (err, result) => {
         if (err) {
-            result.status(500).json({ error: err.message });
-            return;
+            console.error("Update Error:", err);
+            return res.status(500).json({ error: "Failed to update Yojana", details: err.message });
         }
-        res.json({ message: "Document updated successfully" });
+
+        // Step 2: Delete old document mappings from yojana_list_document
+        const sql2 = `DELETE FROM yojana_list_document WHERE yojana_id = ?`;
+
+        db.query(sql2, [id], (err, result) => {
+            if (err) {
+                console.error("Delete Error:", err);
+                return res.status(500).json({ error: "Failed to delete old documents", details: err.message });
+            }
+
+            // Step 3: Insert new document mappings into yojana_list_document
+            const sql3 = `INSERT INTO yojana_list_document (yojana_id, document_id) VALUES ?`;
+
+            const values = documents.map(doc_id => [id, doc_id]);
+
+            db.query(sql3, [values], (err, result) => {
+                if (err) {
+                    console.error("Insert Error:", err);
+                    return res.status(500).json({ error: "Failed to add new documents", details: err.message });
+                }
+                res.json({ message: "Yojana updated successfully", affectedRows: result.affectedRows });
+            });
+        });
     });
 });
+
 
 
 app.put("/api/document-yojana/deactive/:id", (req, res) => {
@@ -452,6 +530,26 @@ app.post("/api/new-document", (req, res) => {
     });
 });
 
+app.put("/api/document/:id", (req, res) => {
+    const { id } = req.params;
+    const { document_name,status } = req.body;
+   
+
+    const sql = `UPDATE document 
+                 SET  document_name = ?, status = ?, update_date_time = NOW() 
+                 WHERE document_id = ?`;
+
+    const values = [document_name, status, id]; 
+
+
+    db.query(sql, [document_name,status, id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ message: "Document updated successfully" });
+    });
+});
  
 // app.delete("/api/document/:id", (req, res) => {
 //     const { id } = req.params;
@@ -769,13 +867,59 @@ app.put("/api/village/deactive/:id", (req, res) => {
 
 
 
+//----------------------------------------------User---------------------------------------
+app.get('/api/user', (req,res) => {
+    const {id} = req.params;
+    db.query('SELECT * FROM user ',  (err,result)=> {
+        if(err){
+            console.log("Error :" , err);
+            return res.status(500).json({error:"Database error"});
+        }
+        res.json(result);
+    });
+});
 
 
+app.put("/api/user/deactive/:id", (req, res) => {
+    const { id } = req.params;
+    console.log(id);
 
 
+    const sql = `UPDATE user 
+                 SET status = 'Deactive' ,time = NOW()  
+                 WHERE id = ?`;
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server running on ${process.env.PORT}`);
+   
+                 db.query(sql, [id], (err, result) => {
+                    if (err) {
+                        res.status(500).json({ error: err.message });
+                        return;
+                    }
+                    res.json({ message: "User Deactivated successfully" });
+                });
+    });
+
+
+app.put("/api/user/:id", (req, res) => {
+        const { status } = req.body;
+        const { id } = req.params;
+    
+        const sql = `UPDATE user
+                     SET status = ? , time = NOW()  
+                     WHERE id = ?`;
+    
+        db.query(sql, [status ,id], (err, result) => {
+            if (err) {
+                result.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({ message: "User updated successfully" });
+        });
+    });
+
+
+app.listen(PORT, () => {
+    console.log(`Server running on ${PORT}`);
 });
 
 

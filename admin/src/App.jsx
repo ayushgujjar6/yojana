@@ -10,10 +10,14 @@ import Taluka from "@/routes/taluka";
 import GramPanchayat from "@/routes/gram-panchayat";
 import Village from '@/routes/village';
 import SignIn from '@/routes/sign-in';
+import Register from "@/routes/register";
 import Category from "@/routes/category";
 import Subcategory from "@/routes/sub-category";
 import Document_Yojana from "@/routes/document_yojana";
 import Document from "@/routes/document";
+import User from "@/routes/user";
+import  Settings  from "@/routes/setting";
+import Setting from "./routes/setting";
 
 function App() {
     const router = createBrowserRouter([
@@ -28,14 +32,6 @@ function App() {
                 {
                     index: true,
                     element: <DashboardPage />,
-                },
-                {
-                    path: "analytics",
-                    element: <h1 className="title">Analytics</h1>,
-                },
-                {
-                    path: "reports",
-                    element: <h1 className="title">Reports</h1>,
                 },
                 {
                     path: "category",
@@ -70,17 +66,21 @@ function App() {
                     element: <Village />,
                 },
                 {
-                    path: "new-customer",
-                    element: <h1 className="title">New Customer</h1>,
+                    path: "User",
+                    element: <User />,
                 },
                 {
-                    path: "verified-customers",
-                    element: <h1 className="title">Verified Customers</h1>,
+                    path: "setting",
+                    element: <Setting />,
                 },
                 {
-                    path: "settings",
-                    element: <h1 className="title">Settings</h1>,
+                    path: "login",
+                    element:<SignIn />
                 },
+                {
+                    path: "register",
+                    element:<Register />
+                }
             ],
         },
     ]);

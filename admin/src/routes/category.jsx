@@ -235,8 +235,8 @@ const Category = () => {
                             <SquareX className="mb-3" />
                         </button>
                         <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
-                            <input ref={nameInputRef} type="text" placeholder="New Category Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.category_name || ""} />
-                            <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
+                            <input ref={nameInputRef} type="text" placeholder="New Category Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.category_name || " "} />
+                            <select ref={statusInputRef} className="w-full p-2 border rounded-md" placeholder="Select Status" required defaultValue={formData?.status || "Active"}>
                                 <option value="Active">Active</option>
                                 <option value="Deactive">Deactive</option>
                             </select>
