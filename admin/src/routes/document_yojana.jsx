@@ -83,6 +83,7 @@ const Document_Yojana = () => {
             try {
                 const response = await fetch(`${URL}/api/active-document`);
                 const data = await response.json();
+                console.log("Fetching Data:", data);
                 setDocumentListData(data);
             } catch (error) {
                 console.error("Error fetching documents:", error);
@@ -108,6 +109,8 @@ const Document_Yojana = () => {
         fetchDocument(); // Load data on component mount
     }, []);
 
+
+  
     
 
     //  Handle opening and closing the form
@@ -124,22 +127,24 @@ const Document_Yojana = () => {
     // Handle form submission (Add/Edit Yojana)
     const submitFormHandler = async (e) => {
         e.preventDefault();
-        
-
-      
-      
 
         if (selectedDocuments.length === 0) {
             toast.error("Please select at least one document.");
             return;
         }
+
+        const yojanaId = Number(e.target.yojana_id.value);
+        console.log("Selected Yojana ID:", yojanaId);
+
         const newDocument = {
             category_id : Number(selectedCategory),
             subcategory_id :Number(selectedSubCategory),
-            yojana_id :Number(e.target.yojana_id.value),
+            yojana_id :yojanaId,
             documents : selectedDocuments ,
             status: statusInputRef.current.value,
         };
+
+        console.log(newDocument);
 
         try {
             const response = await fetch(
@@ -150,6 +155,8 @@ const Document_Yojana = () => {
                     body: JSON.stringify(newDocument),
                 }
             );
+
+            console.log(response);
 
             if (!response.ok) throw new Error("Failed to save document");
 
@@ -279,8 +286,12 @@ const Document_Yojana = () => {
                                         const category = categoryData.find(cat => cat.category_id == document.category_id);
                                         const sub_category = subCategoryData.find(cat => cat.subcategory_id == document.subcategory_id);
                                         const yojana = yojanaData.find(cat => cat.yojana_type_id == document.yojana_id);
-                                        const doc = documentListData.find(cat => cat.document_id == document.document_id);
-                                        
+
+                                        const docIds = document.documents ? document.documents.split(',') : [];
+                                        const docNames = docIds.map(docId => {
+                                            const doc = documentListData.find(cat => cat.document_id == docId);
+                                            return doc ? doc.document_name : "N/A";
+                                        });
 
                                         return (
                                             <tr key={document.id} className="table-row">
@@ -288,7 +299,15 @@ const Document_Yojana = () => {
                                                 <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
                                                 <td className="table-cell">{sub_category ? sub_category.subcategory_name : 'N/A'}</td>
                                                 <td className="table-cell">{yojana ? yojana.yojana_type : 'N/A'}</td>
-                                                <td className="table-cell">{doc ? doc.document_name : "N/A"}</td>
+                                                <td className="table-cell">
+                                                {document.documents 
+                                                    ? document.documents.split(',').map(doc => (
+                                                        <span key={doc} className="badge">{doc}</span>
+                                                    )) 
+                                                    : "No Documents"}
+                                                </td>
+
+
                                                 <td className="table-cell">
                                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium w-fit
                                                         ${document.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"}`}>
@@ -333,6 +352,7 @@ const Document_Yojana = () => {
                         </button>
                         <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
                                 <select
+                                    ref={categoryIDRef}
                                     value={selectedCategory}
                                     onChange={(e) => setSelectedCategory(e.target.value)}
                                     required
@@ -347,6 +367,7 @@ const Document_Yojana = () => {
                                 </select>
 
                                 <select
+                                    ref={subcategoryIDRef}
                                     value={selectedSubCategory}
                                     onChange={(e) => setSelectedSubCategory(e.target.value)}
                                     required
@@ -362,41 +383,42 @@ const Document_Yojana = () => {
                                     ))}
                                 </select>
 
-                                <select name="yojana_id" required className="w-full p-2 border rounded-md">
+                                <select ref={yojanaIDRef} name="yojana_id" required className="w-full p-2 border rounded-md">
                                      <option value="">Select Yojana</option>
                                     {yojanaData
-                                        .filter((yojana) => yojana.subcategory_id == selectedSubCategory) // Filter based on subcategory
+                                        .filter((yojana) => yojana.subcategory_id == selectedSubCategory)
                                         .map((yojana) => (
-                                            <option key={yojana.yojana_type_id} value={yojana.yojana_type_id}>
-                                                {yojana.yojana_type}
-                                            </option>
+                                        <option key={yojana.yojana_type_id} value={yojana.yojana_type_id}>
+                                            {yojana.yojana_type}
+                                        </option>
                                         ))}
                                 </select>
 
-                                {documentData.length > 0 ? (
-                                    <div>
-                                        {documentListData.map((document) => (
-                                            <div key={document.document_id} className="flex items-center space-x-2 text-black">
-                                                <input
-                                                    ref={documentIDRef}
-                                                    type="checkbox"
-                                                    id={`document-${document.document_id}`}
-                                                    value={document.document_id}
-                                                    checked={selectedDocuments.includes(document.document_id)}
-                                                    onChange={() => handleCheckboxChange(document.document_id)}
-                                                    className="p-2 border rounded-md"
-                                                />
-                                                <label htmlFor={`document-${document.document_id}`}>{document.document_name}</label>
-                                            </div>
-                                        ))}
+                                <div className="grid grid-cols-2 gap-4 p-4">
+                                    {documentListData.map((document) => (
+                                        <div
+                                        key={document.document_id}
+                                        className="flex items-center p-2 border rounded-md min-h-[40px]"
+                                        >
+                                        <input
+                                            ref={documentIDRef}
+                                            type="checkbox"
+                                            id={`document-${document.document_id}`}
+                                            value={document.document_id}
+                                            checked={selectedDocuments.includes(document.document_id)}
+                                            onChange={() => handleCheckboxChange(document.document_id)}
+                                            className="appearance-none w-5 h-5 border-2 border-gray-500 rounded-md checked:bg-blue-500 checked:border-blue-600  focus:outline-none cursor-pointer"
+                                        />
+                                        <label
+                                            htmlFor={`document-${document.document_id}`}
+                                            className="ml-2 break-words text-left flex-1"
+                                        >
+                                            {document.document_name}
+                                        </label>
+                                        </div>
+                                    ))}
                                     </div>
-                                ) : (
-                                    <p>No documents available</p>
-                                )}
 
-
-
-                                
 
                                 <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
                                     <option value="Active">Active</option>

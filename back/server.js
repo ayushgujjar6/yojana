@@ -8,12 +8,12 @@ const db = require('./DB/db');
 
 require('dotenv').config();
 
-const PORT  = process.env.DB_PORT ||  3306;
+const PORT  = 5555;
 const SECRET_KEY = process.env.SECRET_KEY;
 
 
 const app =express();
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000" }));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -274,22 +274,6 @@ app.post("/api/new-yojana", (req, res) => {
 });
 
 
-// app.delete("/api/yojana/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM tbl_yojana_type WHERE yojana_type_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting yojana:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "Yojana not found" });
-//             return;
-//         }
-//         res.json({ message: "Yojana deleted successfully" });
-//     });
-// });
 
 
 
@@ -341,16 +325,15 @@ app.get('/api/document-yojana', (req,res) => {
     });
 });
 
+
 app.get("/api/yojana-list-document", (req, res) => {
     const sql = `
         SELECT 
-            dy.id AS yojana_id,
-            dy.yojana_name,
-            GROUP_CONCAT(d.document_name SEPARATOR ', ') AS documents
-        FROM document_yojana dy
-        LEFT JOIN yojana_list_document yld ON dy.id = yld.yojana_id
-        LEFT JOIN document d ON yld.document_id = d.document_id
-        GROUP BY dy.id, dy.yojana_name
+            dj.document_id, dj.category_id, dj.subcategory_id, dj.yojana_id, dj.status, 
+            COALESCE(GROUP_CONCAT(DISTINCT dld.document_id ORDER BY dld.document_id SEPARATOR ','), '') AS documents  
+        FROM document_yojana dj
+        LEFT JOIN yojana_list_document dld ON dj.yojana_id = dld.yojana_id  
+        GROUP BY dj.document_id, dj.category_id, dj.subcategory_id, dj.yojana_id, dj.status;
     `;
 
     db.query(sql, (err, result) => {
@@ -358,9 +341,22 @@ app.get("/api/yojana-list-document", (req, res) => {
             console.error("Error fetching data:", err);
             return res.status(500).json({ error: "Database Error" });
         }
-        res.json(result);
+
+        // Convert documents string to array safely
+        const formattedResult = result.map(row => ({
+            ...row,
+            documents: row.documents.trim() !== '' ? row.documents.split(",").map(Number) : []  
+        }));
+
+        res.json(formattedResult);
+        console.log("Formatted Data:", formattedResult);
     });
 });
+
+
+
+
+
 
 
 app.get('/api/active-document', (req,res) => {
@@ -378,57 +374,38 @@ app.post("/api/new-document-yojana", (req, res) => {
     const { category_id, subcategory_id, yojana_id, documents, status } = req.body;
 
     if (!category_id || !subcategory_id || !yojana_id || !Array.isArray(documents) || documents.length === 0 || !status) {
-        console.error("Validation Error: Missing fields");
         return res.status(400).json({ error: "All fields are required!" });
     }
 
     console.log(req.body);
 
-    // Insert into document_yojana (Main Table)
-    const sql1 = `INSERT INTO document_yojana 
-        (category_id, subcategory_id, yojana_id, status, ins_date_time, update_date_time) 
+    // Insert into document_yojana first
+    const sql1 = `
+        INSERT INTO document_yojana (category_id, subcategory_id, yojana_id, status, ins_date_time, update_date_time) 
         VALUES (?, ?, ?, ?, NOW(), NOW())`;
 
     db.query(sql1, [category_id, subcategory_id, yojana_id, status], (err, result) => {
         if (err) {
-            console.error("Database Insert Error:", err);
-            return res.status(500).json({ error: "Failed to add Yojana", details: err.message });
+            console.log(err);
+            return res.status(500).json({ error: "Failed to add Yojana" });
         }
+        
+        const yojanaId = result.insertId; // Get the inserted yojana_id
+        console.log("Inserted yojanaId:", yojanaId);
 
-        const yojanaId = result.insertId; // Get the inserted Yojana ID
-
-        // Insert into Mapping Table (yojana_list_document)
+        // Insert multiple documents into yojana_list_document
         const sql2 = `INSERT INTO yojana_list_document (yojana_id, document_id) VALUES ?`;
+        const values = documents.map(doc_id => [yojanaId, doc_id]); // Array of value pairs
 
-        const values = documents.map(doc_id => [yojanaId, doc_id]);
-
-        db.query(sql2, [values], (err, result) => {
+        db.query(sql2, [values], (err, result) => { // Pass as an array of arrays
             if (err) {
-                console.error("Database Insert Error:", err);
-                return res.status(500).json({ error: "Failed to map Documents", details: err.message });
+                console.log(err);
+                return res.status(500).json({ error: "Failed to map Documents" });
             }
-            res.json({ message: "Yojana and Documents added successfully", affectedRows: result.affectedRows });
+            res.json({ message: "Yojana and Documents added successfully" });
         });
     });
 });
-
- 
-// app.delete("/api/document-yojana/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM document_yojana WHERE document_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting document:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "Document not found" });
-//             return;
-//         }
-//         res.json({ message: "Document deleted successfully" });
-//     });
-// });
 
 
 
@@ -437,45 +414,42 @@ app.put("/api/document-yojana/:id", (req, res) => {
     const { category_id, subcategory_id, yojana_id, documents, status } = req.body;
 
     if (!category_id || !subcategory_id || !yojana_id || !Array.isArray(documents) || documents.length === 0 || !status) {
-        console.error("Validation Error: Missing fields");
         return res.status(400).json({ error: "All fields are required!" });
     }
 
-    // Step 1: Update Main Table (document_yojana)
-    const sql1 = `UPDATE document_yojana 
+    // Step 1: Update document_yojana
+    const sql1 = `
+        UPDATE document_yojana 
         SET category_id = ?, subcategory_id = ?, yojana_id = ?, status = ?, update_date_time = NOW() 
-        WHERE ID = ?`;
+        WHERE id = ?`;
 
     db.query(sql1, [category_id, subcategory_id, yojana_id, status, id], (err, result) => {
         if (err) {
-            console.error("Update Error:", err);
-            return res.status(500).json({ error: "Failed to update Yojana", details: err.message });
+            return res.status(500).json({ error: "Failed to update Yojana" });
         }
 
-        // Step 2: Delete old document mappings from yojana_list_document
+        // Step 2: Delete old document mappings
         const sql2 = `DELETE FROM yojana_list_document WHERE yojana_id = ?`;
 
         db.query(sql2, [id], (err, result) => {
             if (err) {
-                console.error("Delete Error:", err);
-                return res.status(500).json({ error: "Failed to delete old documents", details: err.message });
+                return res.status(500).json({ error: "Failed to delete old documents" });
             }
 
-            // Step 3: Insert new document mappings into yojana_list_document
+            // Step 3: Insert new document mappings
             const sql3 = `INSERT INTO yojana_list_document (yojana_id, document_id) VALUES ?`;
-
             const values = documents.map(doc_id => [id, doc_id]);
 
             db.query(sql3, [values], (err, result) => {
                 if (err) {
-                    console.error("Insert Error:", err);
-                    return res.status(500).json({ error: "Failed to add new documents", details: err.message });
+                    return res.status(500).json({ error: "Failed to add new documents" });
                 }
-                res.json({ message: "Yojana updated successfully", affectedRows: result.affectedRows });
+                res.json({ message: "Yojana updated successfully" });
             });
         });
     });
 });
+
 
 
 
@@ -551,22 +525,6 @@ app.put("/api/document/:id", (req, res) => {
     });
 });
  
-// app.delete("/api/document/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM document WHERE document_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting document:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "Document not found" });
-//             return;
-//         }
-//         res.json({ message: "Document deleted successfully" });
-//     });
-// });
 
 
 app.put("/api/document/deactive/:id", (req, res) => {
@@ -624,22 +582,7 @@ app.post("/api/new-taluka", (req, res) => {
 });
 
 
-// app.delete("/api/taluka/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM taluka WHERE taluka_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting yojana:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "Yojana not found" });
-//             return;
-//         }
-//         res.json({ message: "Taluka deleted successfully" });
-//     });
-// });
+
 
 app.put("/api/taluka/:id", (req, res) => {
     const { taluka_name_eng, taluka_name_marathi, pincode, status } = req.body;
@@ -712,22 +655,7 @@ app.post('/api/new-panchayat', (req,res)=> {
     });
 });
 
-// app.delete("/api/panchayat/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM gram_panchayat WHERE panchayat_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting yojana:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "Panchayat not found" });
-//             return;
-//         }
-//         res.json({ message: "Panchayat deleted successfully" });
-//     });
-// });
+
 
 
 app.put("/api/panchayat/:id", (req, res) => {
@@ -807,22 +735,6 @@ app.post('/api/new-village', (req,res)=> {
 });
 
 
-//   app.delete("/api/village/:id", (req, res) => {
-//     const { id } = req.params;
-//     const sql = `DELETE FROM village_tbl WHERE village_id = ?`;
-//     db.query(sql, [id], (err, result) => {
-//         if (err) {
-//             console.error("Error deleting village:", err);
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         if (result.affectedRows === 0) {
-//             res.status(404).json({ message: "Village not found" });
-//             return;
-//         }
-//         res.json({ message: "Village deleted successfully" });
-//     });
-// });
 
 
 app.put("/api/village/:id", (req, res) => {
@@ -916,6 +828,137 @@ app.put("/api/user/:id", (req, res) => {
             res.json({ message: "User updated successfully" });
         });
     });
+
+
+
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+////--------------------------------------------------------------------------------------
+
+
+
+//-------------------------------Main website--------------------------------
+
+
+
+
+// app.get("/getCategory", (req, res) => {
+//     db.query("SELECT * FROM category_yojana", (err, results) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       res.json({ data: results });
+//     });
+//   });
+  
+//   app.get("/getSubCategory", (req, res) => {
+//     db.query("SELECT * FROM sub_category", (err, results) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       res.json({ data: results });
+//     });
+//   });
+  
+//   app.get("/getYojanaType", (req, res) => {
+//     db.query("SELECT * FROM tbl_yojana_type", (err, results) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       res.json({ data: results });
+//     });
+//   });
+  
+//   // Submit Application Form
+//   app.post(
+//     "/user-apply",
+//     upload.fields([
+//       { name: "document1", maxCount: 1 },
+//       { name: "document2", maxCount: 1 },
+//       { name: "document3", maxCount: 1 },
+//     ]),
+//     (req, res) => {
+//       const {
+//         aadhar,
+//         surname,
+//         firstName,
+//         fatherName,
+//         beneficiaryType,
+//         category,
+//         subCategory,
+//         yojnaType,
+//         bankName,
+//         ifsc,
+//         accountNo,
+//         amountPaid,
+//       } = req.body;
+  
+//       const document1 = req.files.document1 ? req.files.document1[0].filename : null;
+//       const document2 = req.files.document2 ? req.files.document2[0].filename : null;
+//       const document3 = req.files.document3 ? req.files.document3[0].filename : null;
+  
+//       const sql =
+//         "INSERT INTO applications (aadhar, surname, firstName, fatherName, beneficiaryType, category, subCategory, yojnaType, bankName, ifsc, accountNo, amountPaid, document1, document2, document3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//       const values = [
+//         aadhar,
+//         surname,
+//         firstName,
+//         fatherName,
+//         beneficiaryType,
+//         category,
+//         subCategory,
+//         yojnaType,
+//         bankName,
+//         ifsc,
+//         accountNo,
+//         amountPaid,
+//         document1,
+//         document2,
+//         document3,
+//       ];
+  
+//       db.query(sql, values, (err, result) => {
+//         if (err) return res.status(500).json({ error: err.message });
+//         res.json({ message: "Application submitted successfully" });
+//       });
+//     }
+//   );
+
+
+
+//
+// CREATE TABLE user_applied (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     aadhar VARCHAR(12) NOT NULL,
+//     surname VARCHAR(100),
+//     firstName VARCHAR(100),
+//     fatherName VARCHAR(100),
+//     beneficiaryType VARCHAR(100),
+//     category VARCHAR(100),
+//     subCategory VARCHAR(100),
+//     yojnaType VARCHAR(100),
+//     bankName VARCHAR(100),
+//     ifsc VARCHAR(20),
+//     accountNo VARCHAR(20),
+//     amountPaid DECIMAL(10,2),
+//     document1 VARCHAR(255),
+//     document2 VARCHAR(255),
+//     document3 VARCHAR(255),
+//     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+// );
+
+///---------------------------------------------------------------
+///---------------------------------------------------------------
+///---------------------------------------------------------------
+///---------------------------------------------------------------
+///---------------------------------------------------------------
+
+
+
+
+
 
 
 app.listen(PORT, () => {

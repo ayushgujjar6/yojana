@@ -13,13 +13,13 @@ const dbConfigLocal = {
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'yojana'
+    database: 'governmentscheme'
 };
 
 let db = mysql.createConnection(dbConfigLocal);
 
 db.connect((err) => {
-    //if (err) {
+    // if (err) {
     //     console.error('Clever Cloud DB connection failed:', err.message);
     //     console.log('Trying to connect with Localhost Database...');
         
@@ -31,13 +31,13 @@ db.connect((err) => {
     //             console.log('Connected to Localhost MySQL Database');
     //         }
     //     });
-    //}
+    // }
     if(err) {
         console.error("Localhost connection failed");
         console.log('Error : ', err);
     }
     else{
-        console.log('Connected to MySQL Database');
+        console.log('Connected to Localhost Database');
     }
 });
 
