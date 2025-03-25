@@ -8,7 +8,7 @@ const db = require('./DB/db');
 
 require('dotenv').config();
 
-const PORT  = 5555;
+const PORT  = process.env.DB_PORT;
 const SECRET_KEY = process.env.SECRET_KEY;
 
 
@@ -349,7 +349,6 @@ app.get("/api/yojana-list-document", (req, res) => {
         }));
 
         res.json(formattedResult);
-        console.log("Formatted Data:", formattedResult);
     });
 });
 

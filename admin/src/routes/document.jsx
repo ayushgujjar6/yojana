@@ -221,7 +221,7 @@ const Document = () => {
                                 )}
                             </tbody>
                         </table>
-                        <div className="absolute bottom-5 right-5 flex gap-4">
+                        <div className="pagination">
                             <button onClick={prevPage} disabled={currentPage === 1} className=" px-4 py-2 bg-gray-300 rounded-md">Previous</button>
                             <button onClick={nextPage} disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)} className="px-4 py-2 bg-gray-300 rounded-md">Next</button>
                         </div>
@@ -239,7 +239,7 @@ const Document = () => {
                         </button>
                         <form onSubmit={submitFormHandler} className="space-y-4 mt-3">
                             <input ref={documentRef} type="text" placeholder="New document Name" required className="w-full p-2 border rounded-md" defaultValue={formData?.document_name || ""} />
-                            <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
+                            <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || ""}>
                                 <option value="Active">Active</option>
                                 <option value="Deactive">Deactive</option>
                             </select>

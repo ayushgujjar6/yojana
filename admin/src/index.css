@@ -86,6 +86,16 @@
     .empty-message {
         @apply text-center text-slate-500 dark:text-slate-400 italic py-6;
     }
+
+    .pagination {
+        @apply absolute bottom-5 right-5 flex gap-4;
+    
+        /* Responsive adjustments */
+        @apply sm:bottom-4 sm:right-4 sm:gap-3; /* Smaller gap and position for small screens */
+        @apply md:bottom-3 md:right-3 md:gap-2; /* Further adjust for medium screens */
+        @apply lg:bottom-5 lg:right-5 lg:gap-4; /* Restore original for large screens */
+        @apply flex-wrap; /* Allow wrapping on very small screens */
+    }
     
 }
 

@@ -20,6 +20,8 @@ const Document_Yojana = () => {
     const [selectedSubCategory, setSelectedSubCategory] = useState([]);
     const [selectedDocuments, setSelectedDocuments] = useState([]);
     const [documentListData, setDocumentListData] = useState([]);
+    const [selectedYojana, setSelectedYojana] = useState([]);
+    const [yojanaListDocument, setYojanaListDocument] = useState([]);
     
 
     
@@ -93,6 +95,21 @@ const Document_Yojana = () => {
         fetchDocuments();
     }, []);
 
+    useEffect(() => {
+        const fetchYojanaListDocumnet = async () => {
+            try {
+                const response = await fetch(`${URL}/api/yojana-list-document`);
+                const data = await response.json();
+                setYojanaListDocument(data);
+                console.log("Fetching Selected Documents Data:", data);
+            } catch (error) {
+                console.error("Error fetching documents:", error);
+            }
+        };
+    
+        fetchYojanaListDocumnet();
+    }, []);
+
 
 
     const fetchDocument = async () => {
@@ -133,13 +150,10 @@ const Document_Yojana = () => {
             return;
         }
 
-        const yojanaId = Number(e.target.yojana_id.value);
-        console.log("Selected Yojana ID:", yojanaId);
-
         const newDocument = {
             category_id : Number(selectedCategory),
             subcategory_id :Number(selectedSubCategory),
-            yojana_id :yojanaId,
+            yojana_id :Number(selectedYojana),
             documents : selectedDocuments ,
             status: statusInputRef.current.value,
         };
@@ -150,7 +164,7 @@ const Document_Yojana = () => {
             const response = await fetch(
                  formData?.id ? `${URL}/api/document-yojana/${formData?.id}` : `${URL}/api/new-document-yojana`,
                 {
-                    method: formData?.document_id ? "PUT" : "POST",
+                    method: formData?.id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newDocument),
                 }
@@ -162,7 +176,7 @@ const Document_Yojana = () => {
 
             await fetchDocument(); // Refresh the list after adding/updating
             handleCloseForm();
-            toast.success(formData?.document_id ? "document updated!" : "New document added!");
+            toast.success(formData?.id ? "document updated!" : "New document added!");
         } catch (error) {
             console.error("Error saving document:", error);
         }
@@ -286,12 +300,15 @@ const Document_Yojana = () => {
                                         const category = categoryData.find(cat => cat.category_id == document.category_id);
                                         const sub_category = subCategoryData.find(cat => cat.subcategory_id == document.subcategory_id);
                                         const yojana = yojanaData.find(cat => cat.yojana_type_id == document.yojana_id);
+                                        
+                                        const documents = documentData.find(cat => cat.document_id == document.document_name)
 
-                                        const docIds = document.documents ? document.documents.split(',') : [];
-                                        const docNames = docIds.map(docId => {
-                                            const doc = documentListData.find(cat => cat.document_id == docId);
-                                            return doc ? doc.document_name : "N/A";
-                                        });
+                                        const docIds = yojanaListDocument.find(cat => cat.id == document.documents);
+
+                                        console.log("Document IDs for yojana_id:", document.yojana_id, " -> ", docIds);
+
+
+
 
                                         return (
                                             <tr key={document.id} className="table-row">
@@ -299,13 +316,22 @@ const Document_Yojana = () => {
                                                 <td className="table-cell">{category ? category.category_name : 'N/A'}</td>
                                                 <td className="table-cell">{sub_category ? sub_category.subcategory_name : 'N/A'}</td>
                                                 <td className="table-cell">{yojana ? yojana.yojana_type : 'N/A'}</td>
-                                                <td className="table-cell">
-                                                {document.documents 
-                                                    ? document.documents.split(',').map(doc => (
-                                                        <span key={doc} className="badge">{doc}</span>
-                                                    )) 
-                                                    : "No Documents"}
-                                                </td>
+                                                <td className="table-cell">{docIds ? docIds.document_id : 'N/A'}</td>
+                                                {/* <td className="table-cell">
+                                                {docIds.length > 0 ? (
+                                                    docIds.map(docId => {
+                                                        const doc = yojanaListDocument.find(cat => cat.document_id == docId);
+                                                        console.log("Match Document", doc);
+                                                        return (
+                                                            <span key={docId} className="badge">
+                                                                {doc ? doc.document_name : `ID: ${docId}`} {/* Show document name or fallback to ID */}
+                                                            {/* </span>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    "No Documents"
+                                                )}
+                                                </td> */} 
 
 
                                                 <td className="table-cell">
@@ -334,7 +360,7 @@ const Document_Yojana = () => {
                                 )}
                             </tbody>
                         </table>
-                        <div className="flex lg:justify-end  justify-start gap-4 mt-5 ">
+                        <div className="pagination">
                             <button onClick={prevPage} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded-md">Previous</button>
                             <button onClick={nextPage} disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)} className="px-4 py-2 bg-gray-300 rounded-md">Next</button>
                         </div>
@@ -356,6 +382,7 @@ const Document_Yojana = () => {
                                     value={selectedCategory}
                                     onChange={(e) => setSelectedCategory(e.target.value)}
                                     required
+                                    defaultValue={formData?.category_name || ""}
                                     className="w-full p-2 border rounded-md">
 
                                     <option value="">Select Category</option>
@@ -371,6 +398,7 @@ const Document_Yojana = () => {
                                     value={selectedSubCategory}
                                     onChange={(e) => setSelectedSubCategory(e.target.value)}
                                     required
+                                    defaultValue={formData?.subcategory_name || ""}
                                     className="w-full p-2 border rounded-md">
 
                                 <option value="">Select Sub Category</option>
@@ -383,7 +411,14 @@ const Document_Yojana = () => {
                                     ))}
                                 </select>
 
-                                <select ref={yojanaIDRef} name="yojana_id" required className="w-full p-2 border rounded-md">
+                                <select 
+                                    ref={yojanaIDRef} 
+                                    value={selectedYojana}
+                                    onChange={(e) => setSelectedYojana(e.target.value)}
+                                    required 
+                                    defaultValue={formData?.yojana_type || ""}
+                                    className="w-full p-2 border rounded-md">
+
                                      <option value="">Select Yojana</option>
                                     {yojanaData
                                         .filter((yojana) => yojana.subcategory_id == selectedSubCategory)
@@ -407,6 +442,7 @@ const Document_Yojana = () => {
                                             value={document.document_id}
                                             checked={selectedDocuments.includes(document.document_id)}
                                             onChange={() => handleCheckboxChange(document.document_id)}
+                                            // defaultValue={formData?.document_id || ""}
                                             className="appearance-none w-5 h-5 border-2 border-gray-500 rounded-md checked:bg-blue-500 checked:border-blue-600  focus:outline-none cursor-pointer"
                                         />
                                         <label
@@ -420,7 +456,7 @@ const Document_Yojana = () => {
                                     </div>
 
 
-                                <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || "Active"}>
+                                <select ref={statusInputRef} className="w-full p-2 border rounded-md" required defaultValue={formData?.status || ""}>
                                     <option value="Active">Active</option>
                                     <option value="Deactive">Deactive</option>
                                 </select>
