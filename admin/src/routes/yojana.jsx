@@ -303,6 +303,7 @@ const Yojana = () => {
                                 onChange={handleCategoryChange} 
                                 required 
                                 className="w-full p-2 border rounded-md"
+                                selected={formData?.category_name || ""}
                             >
                                 <option value="">Select Category</option>
                                 {categoryData.map(category => (
@@ -316,6 +317,7 @@ const Yojana = () => {
                                 ref={subCategoryIDRef} 
                                 required 
                                 className="w-full p-2 border rounded-md"
+                                defaultValue={formData?.subcategory_name || ""}
                             >
                                 <option value="">Select Sub Category</option>
                                     {filteredSubcategories.length > 0 ? (
@@ -355,7 +357,7 @@ const Yojana = () => {
                                 <option value="Deactive">Deactive</option>
                             </select>
                             <input ref={linkInputRef} type="text" placeholder="Links" required className="w-full p-2 border rounded-md" defaultValue={formData?.link || ""}/>
-                            <textarea ref={detailsInputRef} placeholder="Details" required className="w-full p-2 border rounded-md h-24" />
+                            <textarea ref={detailsInputRef} placeholder="Details" required className="w-full p-2 border rounded-md h-24" defaultValue={formData?.description || ""}/>
                             <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md">
                                 {formData ? "Update Yojana" : "Add Yojana"}
                             </button>

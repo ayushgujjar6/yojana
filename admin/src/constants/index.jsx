@@ -1,7 +1,6 @@
 import { ChartColumn, Home, NotepadText, Plus , Package, PackagePlus, Settings,ShoppingBag, UserCheck, UserPlus, Users, MapPinHouse, Landmark } from "lucide-react";
 
-import ProfileImage from "@/assets/profile-image.jpg";
-import ProductImage from "@/assets/product-image.jpg";
+
 
 export const navbarLinks = [
     {

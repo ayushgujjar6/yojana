@@ -1,8 +1,8 @@
 import { useTheme } from "@/hooks/use-theme";
 
-import { Bell, ChevronsLeft, Moon, Search, Sun } from "lucide-react";
+import { Bell, ChevronsLeft, Moon, Search, Sun, User } from "lucide-react";
 
-import profileImg from "@/assets/profile-image.jpg";
+
 
 import PropTypes from "prop-types";
 
@@ -50,11 +50,7 @@ export const Header = ({ collapsed, setCollapsed }) => {
                     <Bell size={20} />
                 </button>
                 <button className="size-10 overflow-hidden rounded-full">
-                    <img
-                        src={profileImg}
-                        alt="profile image"
-                        className="size-full object-cover"
-                    />
+                   <User className=" object-cover text-gray-400 " />
                 </button>
             </div>
         </header>

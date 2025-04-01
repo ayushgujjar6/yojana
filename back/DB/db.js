@@ -32,9 +32,13 @@ db.connect((err) => {
             }
         });
     }
+    // if(err) {
+    //     console.error('Error to connect');
+    //     console.error("Error", err);
+    // }
    
     else{
-        console.log('Connected to Clever Cloud Database');
+        console.log('Connected to Localhost Database');
     }
 });
 
