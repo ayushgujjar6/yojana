@@ -21,7 +21,7 @@ let db = mysql.createConnection(dbConfigCleverCloud);
 db.connect((err) => {
     if (err) {
         console.error('DB connection failed:', err.message);
-        console.log('Trying to connect with Localhost Database...');
+        console.log(err);
         
     }
     // if(err) {
