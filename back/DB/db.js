@@ -23,14 +23,6 @@ db.connect((err) => {
         console.error('DB connection failed:', err.message);
         console.log('Trying to connect with Localhost Database...');
         
-        db = mysql.createConnection(dbConfigLocal);
-        db.connect((localErr) => {
-            if (localErr) {
-                console.error('Localhost DB connection failed:', localErr.message);
-            } else {
-                console.log('Connected to Localhost MySQL Database');
-            }
-        });
     }
     // if(err) {
     //     console.error('Error to connect');
