@@ -25,19 +25,32 @@ const Category = () => {
     // Fetch Yojana data from the backend
     const fetchCategory = async () => {
         try {
-            const response = await fetch(`${URL}/api/category`);
+            const response = await fetch(`${URL}/api/category`, {
+                method: "GET",
+                credentials: "include", // Ensures cookies are sent
+                headers: {
+                    "Content-Type": "application/json",
+                    // If using token-based authentication, include Authorization header
+                    "Authorization": `Bearer ${localStorage.getItem("token")}` 
+                },
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
             const data = await response.json();
             setCategoryData(data);
         } catch (error) {
             console.error("Error fetching data:", error);
-            toast.error("Failed to fetch"); 
+            toast.error("Failed to fetch");
         }
     };
-
+    
     useEffect(() => {
         fetchCategory(); // Load data on component mount
     }, []);
-
+    
     
 
     //  Handle opening and closing the form

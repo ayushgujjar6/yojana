@@ -15,10 +15,15 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 const app = express();
 app.use(express.json());
-app.use(cors({
-    origin: process.env.FRONT_URL,
-    credentials: true
-}));
+const cors = require("cors");
+app.use(
+  cors({
+    origin: "https://yojana-mocha.vercel.app", // Your frontend URL
+    credentials: true, // Allow cookies to be sent
+  })
+);
+app.use(require("cookie-parser")()); // Ensure you use cookie-parser
+
 
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
